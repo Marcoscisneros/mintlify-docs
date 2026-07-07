@@ -1,0 +1,160 @@
+---
+title: "GET /menu — List All Pizza Menu Items"
+sidebarTitle: "List Menu Items"
+description: "GET /menu — Returns all available menu items. Filter by category, availability, or search term. Returns id, name, sizes, and toppings."
+---
+
+Retrieve the full pizza menu or narrow results by category, availability, or keyword. This endpoint is paginated and returns a list of menu item objects along with metadata about the full result set.
+
+```
+GET https://api.pizzaapi.com/v1/menu
+```
+
+## Query Parameters
+
+<ParamField query="category" type="string">
+  Filter results by menu category. Accepted values: `pizza`, `side`, `drink`.
+</ParamField>
+
+<ParamField query="available" type="boolean">
+  Set to `true` to return only items that are currently in stock and available for ordering.
+</ParamField>
+
+<ParamField query="search" type="string">
+  Search menu items by name or description. Performs a case-insensitive partial match.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="20">
+  Maximum number of items to return per page. Minimum: `1`, maximum: `100`.
+</ParamField>
+
+<ParamField query="offset" type="integer" default="0">
+  Number of items to skip before starting to return results. Use with `limit` for pagination.
+</ParamField>
+
+## Example Request
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.pizzaapi.com/v1/menu?category=pizza&available=true \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  "https://api.pizzaapi.com/v1/menu?category=pizza&available=true",
+  {
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+    },
+  }
+);
+
+const menu = await response.json();
+console.log(menu);
+```
+
+</CodeGroup>
+
+## Response
+
+```json
+{
+  "data": [
+    {
+      "id": "item_01HXYZ123ABC",
+      "name": "Margherita Classic",
+      "description": "San Marzano tomato sauce, fresh mozzarella, and basil on a hand-tossed crust.",
+      "category": "pizza",
+      "sizes": [
+        { "size": "small", "price": 9.99 },
+        { "size": "medium", "price": 13.99 },
+        { "size": "large", "price": 17.99 }
+      ],
+      "available_toppings": ["topping_extra_cheese", "topping_basil", "topping_olives"],
+      "image_url": "https://cdn.pizzaapi.com/items/margherita-classic.jpg",
+      "is_available": true
+    },
+    {
+      "id": "item_02HXYZ456DEF",
+      "name": "Pepperoni Supreme",
+      "description": "Loaded with double pepperoni, roasted garlic, and three-cheese blend.",
+      "category": "pizza",
+      "sizes": [
+        { "size": "small", "price": 11.99 },
+        { "size": "medium", "price": 15.99 },
+        { "size": "large", "price": 19.99 }
+      ],
+      "available_toppings": ["topping_extra_cheese", "topping_jalapenos", "topping_mushrooms"],
+      "image_url": "https://cdn.pizzaapi.com/items/pepperoni-supreme.jpg",
+      "is_available": true
+    }
+  ],
+  "total": 24,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+## Response Fields
+
+<ResponseField name="data" type="array">
+  Array of menu item objects matching the query.
+
+  <Expandable title="Item object fields">
+    <ResponseField name="data[].id" type="string">
+      Unique identifier for the menu item.
+    </ResponseField>
+
+    <ResponseField name="data[].name" type="string">
+      Display name of the menu item.
+    </ResponseField>
+
+    <ResponseField name="data[].description" type="string">
+      Short description of the menu item, including key ingredients.
+    </ResponseField>
+
+    <ResponseField name="data[].category" type="string">
+      Category the item belongs to. One of `pizza`, `side`, or `drink`.
+    </ResponseField>
+
+    <ResponseField name="data[].sizes" type="array">
+      Available size and price combinations for this item.
+
+      <Expandable title="Size object fields">
+        <ResponseField name="data[].sizes[].size" type="string">
+          Size label: `small`, `medium`, or `large`.
+        </ResponseField>
+
+        <ResponseField name="data[].sizes[].price" type="number">
+          Price in USD for this size.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="data[].available_toppings" type="array">
+      Array of topping IDs that can be added to this item.
+    </ResponseField>
+
+    <ResponseField name="data[].image_url" type="string">
+      URL of the item's image asset.
+    </ResponseField>
+
+    <ResponseField name="data[].is_available" type="boolean">
+      Whether the item is currently available for ordering.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="total" type="integer">
+  Total number of menu items matching the query, before pagination is applied.
+</ResponseField>
+
+<ResponseField name="limit" type="integer">
+  The `limit` value used for this response.
+</ResponseField>
+
+<ResponseField name="offset" type="integer">
+  The `offset` value used for this response.
+</ResponseField>

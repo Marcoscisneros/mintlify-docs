@@ -1,20 +1,57 @@
 ---
-title: "Introduction"
-description: "Welcome to your project"
+title: "Pizza API: Build Delicious Ordering Experiences"
+sidebarTitle: "Home"
+description: "Pizza API lets you integrate pizza ordering into any app — browse menus, place orders, and track deliveries with a simple REST API."
 ---
 
-Write a short description of your product here. What it does, who it's for, and what they can accomplish with it.
+Pizza API gives you everything you need to build a pizza ordering experience from scratch. Browse menu items, configure custom pizzas, manage customer profiles, and track deliveries in real time — all through a clean, predictable REST API.
 
-<Tip>
-  Ready to make this your own? Start by editing this page. Update your `docs.json` file to customize your site. Then fill out the [Quickstart](/quickstart) page.
-</Tip>
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Make your first API call in under 5 minutes
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Get your API key and authenticate requests
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/menu/list-items">
+    Explore every endpoint with request and response examples
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/guides/webhooks">
+    Get real-time notifications for order status changes
+  </Card>
+</CardGroup>
 
-<Card title="Quickstart" icon="rocket" href="/quickstart">
-  This card links to the quickstart page in your project.
-</Card>
-<Card title="Components" icon="puzzle-piece" href="https://mintlify.com/docs/components">
-  Add cards, callouts, steps, tabs, and more to design and structure your pages.
-</Card>
-<Card title="Settings" icon="gear" href="https://mintlify.com/docs/organize/settings">
-  Set your site name, branding, and navigation in the `docs.json` file.
-</Card>
+## What you can build
+
+<CardGroup cols={3}>
+  <Card title="Online Ordering" icon="cart-shopping">
+    Let customers browse your menu and place orders directly from your website or app
+  </Card>
+  <Card title="Delivery Tracking" icon="location-dot">
+    Show live delivery status and accurate ETAs to keep customers informed
+  </Card>
+  <Card title="Order Management" icon="clipboard-list">
+    Build dashboards to manage, update, and fulfill orders in real time
+  </Card>
+</CardGroup>
+
+## Get started in 4 steps
+
+<Steps>
+  <Step title="Get your API key">
+    Sign up at the [dashboard](https://dashboard.pizzaapi.com/signup) and generate an API key from your account settings.
+  </Step>
+  <Step title="Authenticate your requests">
+    Pass your key in the `Authorization` header: `Authorization: Bearer YOUR_API_KEY`
+  </Step>
+  <Step title="Browse the menu">
+    Call `GET /menu` to fetch available pizzas, toppings, and sizes.
+  </Step>
+  <Step title="Place your first order">
+    Use `POST /orders` with your chosen items to create a live order.
+  </Step>
+</Steps>
+
+<Note>
+  All API requests use HTTPS and must include a valid API key. See [Authentication](/authentication) for details.
+</Note>

@@ -1,0 +1,121 @@
+---
+title: "GET /delivery/{order_id}/status — Live Delivery Status"
+sidebarTitle: "Delivery Status"
+description: "GET /delivery/{order_id}/status — Returns the current delivery status, driver details, and estimated delivery time for an active order."
+---
+
+Poll this endpoint to get the real-time delivery status of an active order. The response includes the current status stage, assigned driver information, and the latest estimated delivery timestamp. Tracking information becomes available once the order transitions to the `out_for_delivery` stage.
+
+## Endpoint
+
+```
+GET https://api.pizzaapi.com/v1/delivery/{order_id}/status
+```
+
+## Path Parameters
+
+<ParamField path="order_id" type="string" required>
+  The unique order ID for which you want to retrieve delivery status (e.g. `ord_xyz789`).
+</ParamField>
+
+## Example Request
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url https://api.pizzaapi.com/v1/delivery/ord_xyz789/status \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+
+```javascript JavaScript
+const orderId = 'ord_xyz789';
+
+const response = await fetch(
+  `https://api.pizzaapi.com/v1/delivery/${orderId}/status`,
+  {
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY',
+    },
+  }
+);
+
+const status = await response.json();
+console.log(status.status);          // "in_transit"
+console.log(status.driver.name);     // "Marco R."
+```
+
+</CodeGroup>
+
+## Response
+
+Returns the delivery status object with a `200 OK` status.
+
+```json
+{
+  "order_id": "ord_xyz789",
+  "status": "in_transit",
+  "driver": {
+    "name": "Marco R.",
+    "phone": "+1-555-0199",
+    "vehicle": "Red Honda Civic"
+  },
+  "estimated_delivery_at": "2024-01-15T19:45:00Z",
+  "delivered_at": null,
+  "updated_at": "2024-01-15T19:28:00Z"
+}
+```
+
+### Response Fields
+
+<ResponseField name="order_id" type="string">
+  The unique identifier of the order this status belongs to.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  The current delivery stage. Possible values are:
+
+  | Value | Description |
+  |---|---|
+  | `confirmed` | Order accepted, not yet being prepared. |
+  | `preparing` | Kitchen is actively preparing the order. |
+  | `ready_for_pickup` | Order is ready; awaiting driver assignment. |
+  | `out_for_delivery` | Driver has picked up the order. |
+  | `in_transit` | Driver is en route to the delivery address. |
+  | `delivered` | Order has been successfully delivered. |
+  | `cancelled` | Order was cancelled before delivery. |
+</ResponseField>
+
+<ResponseField name="driver" type="object">
+  Details about the assigned delivery driver. `null` until a driver has been assigned.
+
+  <Expandable title="driver object">
+    <ResponseField name="driver.name" type="string">
+      The driver's display name.
+    </ResponseField>
+
+    <ResponseField name="driver.phone" type="string">
+      A contact phone number for the driver, useful for customers who need to provide gate codes or special instructions.
+    </ResponseField>
+
+    <ResponseField name="driver.vehicle" type="string">
+      A description of the driver's vehicle (e.g. `"Red Honda Civic"`), helping customers identify their delivery.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="estimated_delivery_at" type="string">
+  ISO 8601 timestamp of the current estimated delivery time. Updates as the driver progresses. `null` if an estimate is not yet available.
+</ResponseField>
+
+<ResponseField name="delivered_at" type="string">
+  ISO 8601 timestamp of when the order was confirmed as delivered. `null` until the order reaches `delivered` status.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  ISO 8601 timestamp of the most recent update to this delivery status record.
+</ResponseField>
+
+<Warning>
+  This endpoint is **rate-limited to 1 request per 30 seconds per order**. Exceeding this limit returns a `429 Too Many Requests` response with a `Retry-After` header indicating how many seconds to wait. For real-time delivery updates without polling concerns, we strongly recommend using [webhooks](/guides/webhooks) instead.
+</Warning>

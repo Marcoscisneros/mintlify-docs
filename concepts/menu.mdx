@@ -1,0 +1,120 @@
+---
+title: "Menu Items: Pizzas, Toppings, and Sizes Explained"
+sidebarTitle: "Menu"
+description: "Understand how Pizza API structures menu items, sizes, and toppings so you can display choices and build order forms in your app."
+---
+
+The menu resource is the foundation of every ordering experience built on Pizza API. It exposes the full catalog of items your customers can order — pizzas, sides, and drinks — along with their available sizes, pricing tiers, and topping options. By fetching the menu at runtime, your app always reflects the latest offerings without requiring a manual update on your end.
+
+## Menu item structure
+
+Each menu item is returned as a JSON object with the following key fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | Unique identifier for the menu item |
+| `name` | string | Display name shown to customers |
+| `description` | string | Short description of the item |
+| `category` | string | One of `"pizza"`, `"side"`, or `"drink"` |
+| `sizes` | array | List of `{ size, price }` objects available for this item |
+| `available_toppings` | array | List of topping IDs that can be added to this item |
+| `image_url` | string | URL to the item's display image |
+| `is_available` | boolean | Whether the item is currently in stock |
+
+Here's an example menu item object for a Margherita pizza:
+
+```json
+{
+  "id": "item_margherita",
+  "name": "Margherita",
+  "description": "Classic tomato base with fresh mozzarella and basil.",
+  "category": "pizza",
+  "sizes": [
+    { "size": "small",  "price": 9.99  },
+    { "size": "medium", "price": 12.99 },
+    { "size": "large",  "price": 15.99 }
+  ],
+  "available_toppings": [
+    "top_extra_cheese",
+    "top_mushrooms",
+    "top_olives",
+    "top_pepperoni"
+  ],
+  "image_url": "https://cdn.pizzaapi.com/items/margherita.jpg",
+  "is_available": true
+}
+```
+
+## Sizes
+
+Pizza API uses three standard size tiers. Each size maps to a typical diameter and a base price that varies by menu item. The values in the `sizes` array on each item reflect the actual price for that specific pizza — the table below shows representative baseline ranges.
+
+| Size | Typical diameter | Base price |
+|---|---|---|
+| `small` | 10 in | $8.99 |
+| `medium` | 12 in | $11.99 |
+| `large` | 14 in | $14.99 |
+
+Prices shown here are illustrative. Always read the `sizes` array from the menu item object itself to display accurate, up-to-date pricing in your app.
+
+## Toppings
+
+Toppings are returned as standalone objects and referenced by ID on each menu item's `available_toppings` list. Each topping has the following fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | Unique identifier for the topping |
+| `name` | string | Display name shown to customers |
+| `category` | string | One of `"cheese"`, `"meat"`, or `"veggie"` |
+| `extra_price` | number | Additional charge added per topping selection |
+
+Here's an example of three topping objects:
+
+```json
+[
+  {
+    "id": "top_extra_cheese",
+    "name": "Extra Mozzarella",
+    "category": "cheese",
+    "extra_price": 1.50
+  },
+  {
+    "id": "top_pepperoni",
+    "name": "Pepperoni",
+    "category": "meat",
+    "extra_price": 1.75
+  },
+  {
+    "id": "top_mushrooms",
+    "name": "Mushrooms",
+    "category": "veggie",
+    "extra_price": 1.00
+  }
+]
+```
+
+## Filtering the menu
+
+The `GET /menu` endpoint supports several query parameters to help you surface the right items:
+
+| Parameter | Description |
+|---|---|
+| `category` | Filter by item category: `pizza`, `side`, or `drink` |
+| `available` | Set to `true` to return only currently available items |
+| `search` | Free-text search against `name` and `description` fields |
+
+For example, to fetch all available pizzas matching "margherita":
+
+```bash
+curl https://api.pizzaapi.com/v1/menu \
+  ?category=pizza \
+  &available=true \
+  &search=margherita \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+<Tip>
+  Always pass `?available=true` when building your order form. This filters out
+  out-of-stock items before your customers ever see them, preventing failed
+  orders downstream.
+</Tip>

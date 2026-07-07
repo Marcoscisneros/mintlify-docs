@@ -1,0 +1,81 @@
+---
+title: "Frequently Asked Questions About the Pizza API"
+sidebarTitle: "FAQ"
+description: "Answers to the most common questions about Pizza API authentication, order management, delivery tracking, pricing, and integration patterns."
+---
+
+Have a question about integrating the Pizza API? You're in the right place. Browse the topics below to find answers about authentication, managing orders, tracking deliveries, webhooks, and more. If you don't find what you need, reach out to the team at [support@pizzaapi.com](mailto:support@pizzaapi.com).
+
+## Getting Started
+
+<AccordionGroup>
+  <Accordion title="Do I need to create an account to use the API?">
+    Yes. Sign up at [dashboard.pizzaapi.com](https://dashboard.pizzaapi.com) to create an account and generate your first API key. The whole process takes under two minutes — no credit card required to start exploring.
+  </Accordion>
+
+  <Accordion title="Is there a free tier or sandbox environment?">
+    Yes. Every account includes a **test mode** powered by keys that start with `pk_test_`. Requests made with a test key go through the full API flow but never trigger real orders, real deliveries, or real charges. Switch to a live key (starting with `pk_live_`) when you're ready to go to production.
+  </Accordion>
+
+  <Accordion title="What is the base URL for the API?">
+    All Pizza API endpoints are served from:
+
+    ```
+    https://api.pizzaapi.com/v1
+    ```
+
+    For example, to list available menu items you would call `GET https://api.pizzaapi.com/v1/menu`.
+  </Accordion>
+</AccordionGroup>
+
+## Orders
+
+<AccordionGroup>
+  <Accordion title="Can I modify an order after placing it?">
+    Yes — but only while the order is in `pending` status. Once the order has been confirmed by the kitchen (status moves to `confirmed` or beyond), changes are no longer possible through the API. To check the current status, call `GET /orders/{id}` and inspect the `status` field before attempting any update.
+  </Accordion>
+
+  <Accordion title="How do I cancel an order?">
+    Send a `DELETE /orders/{id}` request. Cancellation is only permitted before the order reaches `preparing` status. If the order has already been picked up by the kitchen you will receive a `409 Conflict` with the `order_not_modifiable` error code.
+  </Accordion>
+
+  <Accordion title="What happens if a menu item I ordered goes out of stock?">
+    The API checks item availability at order creation time. If any item in your `items` array is unavailable, the request is rejected with a `422 Unprocessable` status and the `item_unavailable` error code. No partial orders are created — the entire request fails so you can prompt the user to make a substitution before resubmitting.
+  </Accordion>
+
+  <Accordion title="Can I place multiple pizzas in one order?">
+    Absolutely. Include multiple pizza objects in the `items` array of your `POST /orders` request body. There is no hard limit on the number of items per order, though very large orders may be subject to kitchen-capacity validation at the location level.
+  </Accordion>
+</AccordionGroup>
+
+## Delivery
+
+<AccordionGroup>
+  <Accordion title="How accurate are the delivery ETAs?">
+    ETAs are dynamically calculated based on current driver availability, kitchen preparation time, and distance to the delivery address. They are typically accurate to within **±5 minutes** under normal conditions. During peak hours or bad weather, actual delivery times may vary more significantly.
+  </Accordion>
+
+  <Accordion title="Can I get the driver's live GPS location?">
+    Not at this time. The current API surfaces the assigned driver's **name**, **phone number**, and **vehicle description** once a driver has been dispatched, but live GPS coordinates are not yet available. Real-time tracking is on the roadmap — subscribe to the [changelog](https://docs.pizzaapi.com/changelog) to be notified when it ships.
+  </Accordion>
+
+  <Accordion title="When does the delivery estimate become available?">
+    The `estimated_delivery_at` timestamp is populated as soon as the order reaches `confirmed` status. Before that point the field will be `null`. If you're listening for status changes via webhooks, watch for the `order.confirmed` event to trigger any ETA display logic in your UI.
+  </Accordion>
+</AccordionGroup>
+
+## Webhooks & Integration
+
+<AccordionGroup>
+  <Accordion title="Do I need webhooks, or can I just poll the API?">
+    Both approaches work. **Polling** is fine for low-volume or internal tooling where an occasional delay is acceptable. For production customer-facing apps, **webhooks are strongly recommended** — they deliver real-time status changes without the overhead of repeated requests, and they help you stay well within the [rate limit](/errors#rate-limits) of 100 requests per minute per API key.
+  </Accordion>
+
+  <Accordion title="How many webhook endpoints can I register per account?">
+    You can register up to **10 webhook endpoints** per account. Each endpoint can subscribe to specific event types (e.g., `order.confirmed`, `order.delivered`) or receive all events. Manage your endpoints in the dashboard under **Webhooks**.
+  </Accordion>
+
+  <Accordion title="What should I do if my webhook endpoint is temporarily down?">
+    Pizza API automatically retries failed webhook deliveries up to **3 times** using an exponential backoff schedule. If all retry attempts fail, the event is marked as undelivered. You can review and manually replay failed events in the dashboard under **Webhooks → Event Logs**. It's a good practice to make your webhook handler **idempotent** so that replayed events don't cause duplicate processing.
+  </Accordion>
+</AccordionGroup>

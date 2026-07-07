@@ -1,0 +1,174 @@
+---
+title: "Place a Pizza Order with the Pizza API"
+sidebarTitle: "Place an Order"
+description: "Step-by-step guide to creating a pizza order with the Pizza API: browse the menu, build your cart, submit the order, and confirm it went through."
+---
+
+This guide walks you through the full lifecycle of placing a pizza order using the Pizza API. You'll create or retrieve a customer, browse the menu, build your order, submit it, and verify the response — everything you need to get a pizza on its way.
+
+<Steps>
+  <Step title="Create or retrieve your customer">
+    Before placing an order, you need a customer record. If this is a new customer, create one with `POST /customers`. If the customer already exists, fetch them with `GET /customers/{id}`.
+
+    ```json Request body — POST /customers
+    {
+      "name": "Jamie Lee",
+      "email": "jamie@example.com",
+      "phone": "+1-555-0142",
+      "address": "42 Maple Street, Springfield, IL 62701"
+    }
+    ```
+
+    A successful response returns a `customer_id` you'll use when submitting the order:
+
+    ```json Response
+    {
+      "customer_id": "cus_abc123",
+      "name": "Jamie Lee",
+      "email": "jamie@example.com",
+      "phone": "+1-555-0142",
+      "address": "42 Maple Street, Springfield, IL 62701",
+      "created_at": "2024-01-15T18:00:00Z"
+    }
+    ```
+  </Step>
+
+  <Step title="Browse the menu">
+    Fetch available pizzas by calling `GET /menu` with query parameters to filter by category and availability.
+
+    ```
+    GET /menu?category=pizza&available=true
+    ```
+
+    The response contains a list of menu items with their IDs, base prices, and available customization options:
+
+    ```json Response (abbreviated)
+    {
+      "items": [
+        {
+          "id": "pizza_margherita",
+          "name": "Margherita",
+          "description": "Classic tomato sauce, fresh mozzarella, and basil.",
+          "base_price": 11.99,
+          "available_sizes": ["small", "medium", "large"],
+          "available_toppings": ["extra_cheese", "mushrooms", "bell_peppers", "olives"]
+        },
+        {
+          "id": "pizza_pepperoni",
+          "name": "Pepperoni",
+          "description": "Tomato sauce, mozzarella, and classic pepperoni.",
+          "base_price": 13.99,
+          "available_sizes": ["small", "medium", "large"],
+          "available_toppings": ["extra_cheese", "jalapeños", "mushrooms", "onions"]
+        }
+      ]
+    }
+    ```
+
+    Store the `id` of each pizza your customer wants — you'll need it to build the order.
+  </Step>
+
+  <Step title="Build your order items">
+    Construct the `items` array you'll include in the order request. Each item references a menu item by its ID and specifies the size, quantity, toppings, and any special instructions.
+
+    ```json items array
+    [
+      {
+        "menu_item_id": "pizza_pepperoni",
+        "size": "large",
+        "quantity": 1,
+        "toppings": ["extra_cheese", "mushrooms"],
+        "special_instructions": "Well done crust please"
+      }
+    ]
+    ```
+
+    See the [Customize Pizza](/guides/customize-pizza) guide for the full range of topping and size options.
+  </Step>
+
+  <Step title="Submit the order">
+    Post the complete order to `POST /orders`, including the `customer_id`, your `items` array, and the delivery address.
+
+    <CodeGroup>
+      ```bash curl
+      curl --request POST \
+        --url https://api.pizzaapi.com/orders \
+        --header 'Authorization: Bearer YOUR_API_KEY' \
+        --header 'Content-Type: application/json' \
+        --data '{
+          "customer_id": "cus_abc123",
+          "items": [
+            {
+              "menu_item_id": "pizza_pepperoni",
+              "size": "large",
+              "quantity": 1,
+              "toppings": ["extra_cheese", "mushrooms"],
+              "special_instructions": "Well done crust please"
+            }
+          ],
+          "delivery_address": "42 Maple Street, Springfield, IL 62701"
+        }'
+      ```
+
+      ```javascript JavaScript (fetch)
+      const response = await fetch("https://api.pizzaapi.com/orders", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer YOUR_API_KEY",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customer_id: "cus_abc123",
+          items: [
+            {
+              menu_item_id: "pizza_pepperoni",
+              size: "large",
+              quantity: 1,
+              toppings: ["extra_cheese", "mushrooms"],
+              special_instructions: "Well done crust please",
+            },
+          ],
+          delivery_address: "42 Maple Street, Springfield, IL 62701",
+        }),
+      });
+
+      const order = await response.json();
+      console.log(order);
+      ```
+    </CodeGroup>
+
+    A successful `201 Created` response confirms the order was received:
+
+    ```json Response
+    {
+      "id": "ord_xyz789",
+      "status": "pending",
+      "customer_id": "cus_abc123",
+      "total": 16.99,
+      "estimated_delivery_time": "2024-01-15T19:45:00Z",
+      "created_at": "2024-01-15T19:05:00Z"
+    }
+    ```
+  </Step>
+
+  <Step title="Handle the response">
+    After submitting, check the `status` field in the response. A freshly submitted order will have a status of `pending`, meaning it has been received and is awaiting acceptance by the kitchen.
+
+    Store the `id` returned in the response — this is your `order_id` and is required for all subsequent tracking and management calls.
+
+    ```javascript Storing the order ID
+    const { id: orderId, status, estimated_delivery_time } = order;
+
+    console.log(`Order ${orderId} is ${status}.`);
+    console.log(`Estimated delivery: ${estimated_delivery_time}`);
+    ```
+
+    <Tip>
+      Subscribe to [webhooks](/guides/webhooks) to receive instant push notifications when the order status changes. This is far more efficient than polling the API repeatedly.
+    </Tip>
+  </Step>
+</Steps>
+
+<Note>
+  Orders transition from `pending` to `confirmed` once the kitchen accepts them. If you need to modify the order — such as adding items or changing the delivery address — you must do so **before** the order reaches `confirmed` status. After that point, modifications are no longer accepted.
+</Note>

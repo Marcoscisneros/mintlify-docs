@@ -1,0 +1,315 @@
+---
+title: "POST /orders — Create a New Pizza Order"
+sidebarTitle: "Create Order"
+description: "POST /orders — Creates a new pizza order with line items, toppings, and a delivery address. Returns the order ID and initial pending status."
+---
+
+Place a new pizza order on behalf of a customer. Submit one or more line items — each specifying a menu item, size, quantity, and optional toppings — along with a delivery address. The order is created with a `pending` status and can be modified until it is confirmed by the kitchen.
+
+```
+POST https://api.pizzaapi.com/v1/orders
+```
+
+## Request Body
+
+<ParamField body="customer_id" type="string" required>
+  The unique ID of the customer placing the order. Must correspond to an existing customer record.
+</ParamField>
+
+<ParamField body="items" type="array" required>
+  Array of line item objects representing the pizzas and other products being ordered. Must contain at least one item.
+
+  <Expandable title="Item object fields">
+    <ParamField body="items[].menu_item_id" type="string" required>
+      The ID of the menu item to order (e.g. `item_01HXYZ123ABC`).
+    </ParamField>
+
+    <ParamField body="items[].size" type="string" required>
+      Desired size for this item. Accepted values: `small`, `medium`, `large`.
+    </ParamField>
+
+    <ParamField body="items[].quantity" type="integer" required>
+      Number of this item to include. Minimum: `1`.
+    </ParamField>
+
+    <ParamField body="items[].toppings" type="array">
+      Array of topping IDs to add to this item. Each ID must be present in the item's `available_toppings` list.
+    </ParamField>
+
+    <ParamField body="items[].special_instructions" type="string">
+      Free-text preparation instructions for this item (e.g. "extra crispy crust"). Maximum 200 characters.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="delivery_address" type="object" required>
+  The address to deliver the order to.
+
+  <Expandable title="Address object fields">
+    <ParamField body="delivery_address.street" type="string" required>
+      Street address including house/apartment number (e.g. `123 Main St, Apt 4`).
+    </ParamField>
+
+    <ParamField body="delivery_address.city" type="string" required>
+      City name.
+    </ParamField>
+
+    <ParamField body="delivery_address.state" type="string" required>
+      Two-letter state abbreviation (e.g. `CA`, `NY`).
+    </ParamField>
+
+    <ParamField body="delivery_address.zip" type="string" required>
+      ZIP or postal code.
+    </ParamField>
+
+    <ParamField body="delivery_address.country" type="string" default="US">
+      ISO 3166-1 alpha-2 country code. Defaults to `US`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Example Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.pizzaapi.com/v1/orders \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "cust_98ZABC987XYZ",
+    "items": [
+      {
+        "menu_item_id": "item_01HXYZ123ABC",
+        "size": "large",
+        "quantity": 1,
+        "toppings": ["topping_extra_cheese", "topping_olives"],
+        "special_instructions": "Well-done crust please."
+      },
+      {
+        "menu_item_id": "item_03HXYZ789GHI",
+        "size": "medium",
+        "quantity": 2,
+        "toppings": []
+      }
+    ],
+    "delivery_address": {
+      "street": "742 Evergreen Terrace",
+      "city": "Springfield",
+      "state": "IL",
+      "zip": "62704",
+      "country": "US"
+    }
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.pizzaapi.com/v1/orders", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    customer_id: "cust_98ZABC987XYZ",
+    items: [
+      {
+        menu_item_id: "item_01HXYZ123ABC",
+        size: "large",
+        quantity: 1,
+        toppings: ["topping_extra_cheese", "topping_olives"],
+        special_instructions: "Well-done crust please.",
+      },
+      {
+        menu_item_id: "item_03HXYZ789GHI",
+        size: "medium",
+        quantity: 2,
+        toppings: [],
+      },
+    ],
+    delivery_address: {
+      street: "742 Evergreen Terrace",
+      city: "Springfield",
+      state: "IL",
+      zip: "62704",
+      country: "US",
+    },
+  }),
+});
+
+const order = await response.json();
+console.log(order);
+```
+
+```python Python
+import requests
+
+payload = {
+    "customer_id": "cust_98ZABC987XYZ",
+    "items": [
+        {
+            "menu_item_id": "item_01HXYZ123ABC",
+            "size": "large",
+            "quantity": 1,
+            "toppings": ["topping_extra_cheese", "topping_olives"],
+            "special_instructions": "Well-done crust please.",
+        },
+        {
+            "menu_item_id": "item_03HXYZ789GHI",
+            "size": "medium",
+            "quantity": 2,
+            "toppings": [],
+        },
+    ],
+    "delivery_address": {
+        "street": "742 Evergreen Terrace",
+        "city": "Springfield",
+        "state": "IL",
+        "zip": "62704",
+        "country": "US",
+    },
+}
+
+response = requests.post(
+    "https://api.pizzaapi.com/v1/orders",
+    json=payload,
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+)
+
+order = response.json()
+print(order)
+```
+
+</CodeGroup>
+
+## Response
+
+```json
+{
+  "id": "order_55ABCD112233",
+  "status": "pending",
+  "customer_id": "cust_98ZABC987XYZ",
+  "items": [
+    {
+      "menu_item_id": "item_01HXYZ123ABC",
+      "name": "Margherita Classic",
+      "size": "large",
+      "quantity": 1,
+      "toppings": ["topping_extra_cheese", "topping_olives"],
+      "special_instructions": "Well-done crust please.",
+      "unit_price": 17.99,
+      "line_total": 17.99
+    },
+    {
+      "menu_item_id": "item_03HXYZ789GHI",
+      "name": "Garlic Breadsticks",
+      "size": "medium",
+      "quantity": 2,
+      "toppings": [],
+      "special_instructions": null,
+      "unit_price": 6.99,
+      "line_total": 13.98
+    }
+  ],
+  "subtotal": 31.97,
+  "tax": 2.88,
+  "total": 34.85,
+  "delivery_address": {
+    "street": "742 Evergreen Terrace",
+    "city": "Springfield",
+    "state": "IL",
+    "zip": "62704",
+    "country": "US"
+  },
+  "created_at": "2024-06-15T14:23:00Z",
+  "estimated_delivery_time": "2024-06-15T15:08:00Z"
+}
+```
+
+## Response Fields
+
+<ResponseField name="id" type="string">
+  Unique identifier for the newly created order.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current order status. Always `pending` immediately after creation. Progresses through `confirmed` → `preparing` → `out_for_delivery` → `delivered`.
+</ResponseField>
+
+<ResponseField name="customer_id" type="string">
+  ID of the customer who placed the order.
+</ResponseField>
+
+<ResponseField name="items" type="array">
+  The resolved line items included in this order, with pricing details applied.
+
+  <Expandable title="Line item fields">
+    <ResponseField name="items[].menu_item_id" type="string">
+      ID of the menu item.
+    </ResponseField>
+
+    <ResponseField name="items[].name" type="string">
+      Display name of the menu item.
+    </ResponseField>
+
+    <ResponseField name="items[].size" type="string">
+      Size selected for this line item.
+    </ResponseField>
+
+    <ResponseField name="items[].quantity" type="integer">
+      Quantity ordered.
+    </ResponseField>
+
+    <ResponseField name="items[].toppings" type="array">
+      Array of topping IDs applied to this line item.
+    </ResponseField>
+
+    <ResponseField name="items[].special_instructions" type="string | null">
+      Any special preparation instructions, or `null` if none were provided.
+    </ResponseField>
+
+    <ResponseField name="items[].unit_price" type="number">
+      Price per unit for this item and size in USD.
+    </ResponseField>
+
+    <ResponseField name="items[].line_total" type="number">
+      Total price for this line item (`unit_price × quantity`) in USD.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="subtotal" type="number">
+  Sum of all line item totals, before tax, in USD.
+</ResponseField>
+
+<ResponseField name="tax" type="number">
+  Calculated tax amount in USD.
+</ResponseField>
+
+<ResponseField name="total" type="number">
+  Final order total including tax, in USD.
+</ResponseField>
+
+<ResponseField name="delivery_address" type="object">
+  The delivery address on file for this order.
+
+  <Expandable title="Address fields">
+    <ResponseField name="delivery_address.street" type="string">Street address.</ResponseField>
+    <ResponseField name="delivery_address.city" type="string">City name.</ResponseField>
+    <ResponseField name="delivery_address.state" type="string">State abbreviation.</ResponseField>
+    <ResponseField name="delivery_address.zip" type="string">ZIP or postal code.</ResponseField>
+    <ResponseField name="delivery_address.country" type="string">Country code.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the order was created.
+</ResponseField>
+
+<ResponseField name="estimated_delivery_time" type="string">
+  ISO 8601 timestamp of the estimated delivery window.
+</ResponseField>
+
+<Note>
+  To modify line items or the delivery address after creation, use `PATCH /orders/{id}`. Changes are only permitted while the order status remains `pending`.
+</Note>

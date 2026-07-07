@@ -1,0 +1,85 @@
+---
+title: "Delivery Tracking: Status, ETA, and Driver Info"
+sidebarTitle: "Delivery"
+description: "Understand how Pizza API tracks deliveries in real time, calculates ETAs, and exposes driver location so you can keep customers informed."
+---
+
+Pizza API's delivery tracking layer lets you follow an order from the moment a driver is assigned through to the final doorstep confirmation. This covers real-time status transitions, driver contact details, ETA calculations, and the recommended approach for surfacing live updates in your customer-facing app — whether you prefer event-driven webhooks or a polling strategy.
+
+## Delivery status object
+
+When an order moves into the delivery phase, Pizza API creates a delivery record associated with the order. Fetch it at any time with `GET /delivery/{order_id}/status`.
+
+| Field | Type | Description |
+|---|---|---|
+| `order_id` | string | The order this delivery record belongs to |
+| `status` | string | Current delivery status (see transitions below) |
+| `driver` | object | Driver details: `name`, `phone`, and `vehicle` |
+| `estimated_delivery_at` | string | ISO 8601 timestamp of the projected delivery time |
+| `delivered_at` | string | ISO 8601 timestamp of actual delivery (set on completion) |
+
+Here's an example delivery status object:
+
+```json
+{
+  "order_id": "ord_a1b2c3d4",
+  "status": "in_transit",
+  "driver": {
+    "name": "Marco Rossi",
+    "phone": "+1-555-234-5678",
+    "vehicle": "Red Vespa · plate ABC-123"
+  },
+  "estimated_delivery_at": "2024-06-01T19:05:00Z",
+  "delivered_at": null
+}
+```
+
+## Status transitions
+
+The delivery status follows a strict forward-only sequence:
+
+| Step | Status | Meaning |
+|---|---|---|
+| 1 | `pending` | No driver assigned yet; order is queued for dispatch |
+| 2 | `assigned` | A driver has been matched to the order |
+| 3 | `picked_up` | Driver has collected the order from the restaurant |
+| 4 | `in_transit` | Driver is actively en route to the delivery address |
+| 5 | `delivered` | Order has been handed to the customer |
+
+Each transition is triggered automatically by Pizza API's dispatch system or by the driver's mobile app. Your integration does not need to advance the status manually.
+
+## ETA estimation
+
+Before a driver picks up the order, you can request a delivery time estimate using:
+
+```bash
+curl "https://api.pizzaapi.com/v1/delivery/ord_a1b2c3d4/estimate" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+The response includes both a relative and absolute estimate:
+
+```json
+{
+  "order_id": "ord_a1b2c3d4",
+  "estimated_minutes": 28,
+  "estimated_delivery_at": "2024-06-01T19:05:00Z"
+}
+```
+
+`estimated_minutes` is calculated from the current time using real-time traffic data and the restaurant's current preparation queue. The estimate refreshes each time you call the endpoint, so it becomes more accurate as the order progresses. Once the driver has picked up the order, `estimated_delivery_at` is also reflected on the main delivery status object.
+
+## Staying up to date
+
+There are two ways to receive delivery updates in your app:
+
+**Webhooks (recommended)** — Subscribe to delivery events such as `delivery.status_updated` and `delivery.delivered` to receive instant push notifications whenever the status changes. This approach requires no polling and keeps your UI in sync with minimal latency. See the [Webhooks guide](/guides/webhooks) for setup instructions.
+
+**Polling** — If webhooks aren't feasible in your environment, you can periodically call `GET /delivery/{order_id}/status` to check for changes and update your UI accordingly.
+
+<Note>
+  Polling `GET /delivery/{order_id}/status` more than once every 30 seconds will
+  trigger rate limiting. Requests that exceed this threshold return a
+  `429 Too Many Requests` response. If you must poll, use an interval of 30
+  seconds or greater to stay within limits.
+</Note>

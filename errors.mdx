@@ -1,0 +1,157 @@
+---
+title: "Pizza API Error Codes and How to Fix Them"
+sidebarTitle: "Error Codes"
+description: "Complete reference for Pizza API HTTP error codes and error response shapes. Learn what each error means and how to resolve it quickly."
+---
+
+The Pizza API returns standard HTTP status codes on every response. When a request fails, the response body always contains a JSON object describing what went wrong — so you can handle errors programmatically and surface useful messages to your users.
+
+## Error response format
+
+All error responses share the same JSON envelope:
+
+```json
+{
+  "error": {
+    "code": "invalid_request",
+    "message": "The 'size' field is required for each item.",
+    "param": "items[0].size"
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `code` | string | A machine-readable slug you can switch on in your code. |
+| `message` | string | A human-readable explanation of what went wrong. |
+| `param` | string (optional) | The specific request field that caused the error, when applicable. |
+
+Use `code` for error-handling logic and `message` for displaying information to end users or writing to logs.
+
+## HTTP status codes
+
+| Status | Meaning | Common Causes |
+|---|---|---|
+| `400` | Bad Request | Malformed JSON, missing required fields |
+| `401` | Unauthorized | Missing or invalid API key |
+| `403` | Forbidden | API key lacks permission for this action |
+| `404` | Not Found | Resource ID doesn't exist |
+| `409` | Conflict | Order already in a non-editable state |
+| `422` | Unprocessable | Invalid topping ID, unsupported size, etc. |
+| `429` | Too Many Requests | Rate limit exceeded |
+| `500` | Server Error | Internal Pizza API error — contact support |
+
+## Error codes reference
+
+Each `code` slug maps to a specific failure mode. Expand each entry below for details and recommended actions.
+
+<AccordionGroup>
+  <Accordion title="unauthorized — Invalid or missing API key">
+    Your request did not include a valid API key, or the key has been revoked.
+
+    **How to fix:** Verify the `Authorization: Bearer <key>` header is present and that the key is copied correctly from the [dashboard](https://dashboard.pizzaapi.com). If the key was recently rotated, update your environment variables.
+  </Accordion>
+
+  <Accordion title="forbidden — Key doesn't have access">
+    Your API key is valid but does not have permission to perform the requested action. For example, a read-only key attempting to create or cancel an order.
+
+    **How to fix:** Check your key's permission scopes in the dashboard under **API Keys** and generate a key with the required permissions if needed.
+  </Accordion>
+
+  <Accordion title="not_found — Resource not found">
+    The resource ID in your request (e.g., an order ID or menu item ID) does not exist or is not accessible with your API key.
+
+    **How to fix:** Double-check the ID in your request path. Ensure the resource belongs to the same account as your API key.
+  </Accordion>
+
+  <Accordion title="invalid_request — Validation failed">
+    One or more fields in your request body failed validation. The `param` field in the error response identifies the specific offending field.
+
+    **How to fix:** Inspect the `param` value — for example, `items[0].size` — and correct that field in your request. Refer to the endpoint's parameter reference for allowed values.
+  </Accordion>
+
+  <Accordion title="item_unavailable — Menu item is out of stock">
+    A menu item in your `items` array is temporarily unavailable or out of stock at the requested location.
+
+    **How to fix:** Remove the unavailable item from the order, or prompt the user to choose a different item. You can query the `/menu` endpoint to check current availability before placing an order.
+  </Accordion>
+
+  <Accordion title="invalid_topping — Topping not valid for this pizza">
+    One or more topping IDs in your request are not compatible with the selected pizza base, or the topping ID does not exist.
+
+    **How to fix:** Fetch the valid toppings for a menu item via `GET /menu/{item_id}/toppings` and ensure all requested toppings are in the returned list.
+  </Accordion>
+
+  <Accordion title="order_not_modifiable — Order is past pending state">
+    You attempted to modify or cancel an order that has already moved past `pending` status. Once an order is confirmed by the kitchen, it can no longer be edited.
+
+    **How to fix:** Check the order's `status` field before attempting modifications. If you need to make changes urgently, contact support — no programmatic override is available once the order is in `preparing` or later.
+  </Accordion>
+
+  <Accordion title="rate_limited — Too many requests">
+    Your API key has exceeded the allowed request rate. See the [Rate limits](#rate-limits) section below for header details.
+
+    **How to fix:** Back off and retry after the time indicated by the `X-RateLimit-Reset` header. For sustained high-volume usage, consider batching requests or caching responses where appropriate.
+  </Accordion>
+
+  <Accordion title="server_error — Internal Pizza API error">
+    An unexpected error occurred on Pizza API's servers. These are rare and typically transient.
+
+    **How to fix:** Retry the request using exponential backoff (see [Retrying requests](#retrying-requests) below). If the error persists for more than a few minutes, check the [Pizza API status page](https://status.pizzaapi.com) or contact support.
+  </Accordion>
+</AccordionGroup>
+
+## Rate limits
+
+Each API key is allowed **100 requests per minute**. Every API response includes the following headers so you can monitor your usage proactively:
+
+| Header | Description |
+|---|---|
+| `X-RateLimit-Remaining` | Number of requests remaining in the current window. |
+| `X-RateLimit-Reset` | Unix timestamp (seconds) when the current window resets. |
+
+When the limit is exceeded, the API responds with `429 Too Many Requests` and the `rate_limited` error code.
+
+<Tip>
+  Read `X-RateLimit-Remaining` on every response — not just when you hit a 429. Proactively slowing down when the value approaches zero prevents interruptions in your integration.
+</Tip>
+
+## Retrying requests
+
+Transient failures from `429` and `500` errors can usually be resolved by retrying with **exponential backoff** — waiting progressively longer between attempts to avoid overwhelming the API.
+
+<Tip>
+  Always cap your retry attempts (e.g., 4–5 retries) and add a small amount of random jitter to each delay to avoid synchronized retry storms from multiple clients.
+</Tip>
+
+Here's a simple JavaScript helper that retries with exponential backoff:
+
+```js
+async function fetchWithRetry(url, options, maxRetries = 4) {
+  let attempt = 0;
+
+  while (attempt <= maxRetries) {
+    const response = await fetch(url, options);
+
+    // Success — return immediately
+    if (response.ok) return response;
+
+    const { status } = response;
+
+    // Only retry on 429 or 500
+    if ((status === 429 || status === 500) && attempt < maxRetries) {
+      const delay = Math.pow(2, attempt) * 200 + Math.random() * 100; // ms
+      console.warn(`Attempt ${attempt + 1} failed (${status}). Retrying in ${Math.round(delay)}ms…`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      attempt++;
+      continue;
+    }
+
+    // Non-retryable error — surface it
+    const body = await response.json();
+    throw new Error(`Pizza API error [${status}]: ${body.error?.message}`);
+  }
+}
+```
+
+For `429` responses, you can also read the `X-RateLimit-Reset` header and wait until that exact timestamp instead of using a fixed backoff window.

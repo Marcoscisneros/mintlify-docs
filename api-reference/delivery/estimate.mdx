@@ -1,0 +1,87 @@
+---
+title: "GET /delivery/{order_id}/estimate — Delivery ETA"
+sidebarTitle: "Delivery Estimate"
+description: "GET /delivery/{order_id}/estimate — Returns estimated delivery time in minutes and an ISO timestamp for when the order is expected to arrive."
+---
+
+Retrieve a point-in-time delivery estimate for an order, including both the number of minutes remaining and the expected arrival timestamp. Estimates are computed from the current driver location, traffic conditions, and kitchen preparation time, and are recalculated each time you call this endpoint.
+
+## Endpoint
+
+```
+GET https://api.pizzaapi.com/v1/delivery/{order_id}/estimate
+```
+
+## Path Parameters
+
+<ParamField path="order_id" type="string" required>
+  The unique order ID for which you want a delivery estimate (e.g. `ord_xyz789`).
+</ParamField>
+
+## Example Request
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url https://api.pizzaapi.com/v1/delivery/ord_xyz789/estimate \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+
+```javascript JavaScript
+const orderId = 'ord_xyz789';
+
+const response = await fetch(
+  `https://api.pizzaapi.com/v1/delivery/${orderId}/estimate`,
+  {
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY',
+    },
+  }
+);
+
+const estimate = await response.json();
+console.log(`Estimated arrival in ${estimate.estimated_minutes} minutes`);
+// "Estimated arrival in 35 minutes"
+```
+
+</CodeGroup>
+
+## Response
+
+Returns the delivery estimate object with a `200 OK` status.
+
+```json
+{
+  "order_id": "ord_xyz789",
+  "estimated_minutes": 35,
+  "estimated_delivery_at": "2024-01-15T19:45:00Z",
+  "calculated_at": "2024-01-15T19:10:00Z"
+}
+```
+
+### Response Fields
+
+<ResponseField name="order_id" type="string">
+  The unique identifier of the order this estimate belongs to.
+</ResponseField>
+
+<ResponseField name="estimated_minutes" type="integer">
+  The number of minutes from `calculated_at` until the order is expected to be delivered. This value rounds to the nearest whole minute.
+</ResponseField>
+
+<ResponseField name="estimated_delivery_at" type="string">
+  ISO 8601 timestamp of the predicted delivery time, equivalent to `calculated_at` plus `estimated_minutes`.
+</ResponseField>
+
+<ResponseField name="calculated_at" type="string">
+  ISO 8601 timestamp of when this estimate was computed. Use this to determine how fresh the estimate is before displaying it to customers.
+</ResponseField>
+
+<Note>
+  Delivery estimates are only available once an order reaches `confirmed` status. Calling this endpoint on an order that is still `pending` returns a `404 Not Found` response. Check the order status via `GET /delivery/{order_id}/status` before requesting an estimate.
+</Note>
+
+<Tip>
+  Estimates are recalculated on every request. For the most accurate ETA, re-fetch this endpoint each time the order's `status` changes — for example, when it transitions from `preparing` to `out_for_delivery`. Displaying `calculated_at` alongside the ETA helps customers understand when the estimate was last refreshed.
+</Tip>

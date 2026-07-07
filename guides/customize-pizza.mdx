@@ -1,0 +1,108 @@
+---
+title: "Customize Pizzas with Toppings and Special Requests"
+sidebarTitle: "Customize Pizza"
+description: "Learn how to configure toppings, choose sizes, and send special instructions when building pizza line items with the Pizza API."
+---
+
+The Pizza API gives you fine-grained control over every pizza in an order. Each line item can carry its own size, a list of toppings drawn from the menu item's available options, and a free-text special instructions field. This guide covers all the customization parameters and how they affect pricing.
+
+## Choosing a size
+
+Every pizza menu item supports three sizes: `"small"`, `"medium"`, and `"large"`. The `size` field is required on every line item. Size directly affects the unit price — each step up adds a flat amount to the item's `base_price`.
+
+| Size | Price modifier |
+|---|---|
+| `small` | Base price |
+| `medium` | Base price + $2.00 |
+| `large` | Base price + $4.00 |
+
+```json Size field example
+{
+  "menu_item_id": "pizza_margherita",
+  "size": "medium",
+  "quantity": 1
+}
+```
+
+## Adding and removing toppings
+
+The `toppings` array lets you add extra toppings on top of whatever comes standard with the pizza. Toppings are grouped into three categories:
+
+- **Cheese** — `extra_cheese`, `parmesan`, `vegan_cheese`
+- **Meat** — `pepperoni`, `bacon`, `grilled_chicken`, `sausage`
+- **Veggie** — `mushrooms`, `bell_peppers`, `onions`, `olives`, `jalapeños`, `spinach`
+
+Each menu item exposes its own `available_toppings` list (returned by `GET /menu`). Only toppings present on that list are valid for the item. Each extra topping has a per-topping price that is added to the line item subtotal.
+
+```json Line item with extra toppings
+{
+  "menu_item_id": "pizza_pepperoni",
+  "size": "large",
+  "quantity": 2,
+  "toppings": ["extra_cheese", "mushrooms", "bell_peppers"],
+  "special_instructions": "Well done crust please"
+}
+```
+
+<Warning>
+  Toppings not listed in `available_toppings` for the menu item will cause the API to return a `422 Unprocessable Entity` error. Always validate topping selections against the menu response before submitting an order.
+</Warning>
+
+## Special instructions
+
+The `special_instructions` field is an optional free-text string with a maximum length of **200 characters**. Use it to communicate anything that isn't captured by the structured fields.
+
+<Tip>
+  Common uses for `special_instructions` include crust preferences ("extra crispy"), allergy notes ("no nuts in the kitchen please"), or cutting preferences ("cut into squares").
+</Tip>
+
+```json Special instructions example
+{
+  "menu_item_id": "pizza_margherita",
+  "size": "small",
+  "quantity": 1,
+  "toppings": ["extra_cheese"],
+  "special_instructions": "Gluten-sensitive — please use a clean cutter"
+}
+```
+
+## Multiple items in one order
+
+You can include as many line items as you need in a single order by adding objects to the `items` array. Each item is customized independently.
+
+```json items array with two different pizzas
+[
+  {
+    "menu_item_id": "pizza_pepperoni",
+    "size": "large",
+    "quantity": 1,
+    "toppings": ["extra_cheese", "jalapeños"],
+    "special_instructions": "Extra crispy crust"
+  },
+  {
+    "menu_item_id": "pizza_margherita",
+    "size": "medium",
+    "quantity": 2,
+    "toppings": ["mushrooms", "olives", "spinach"],
+    "special_instructions": "Light on the sauce please"
+  }
+]
+```
+
+## Pricing calculation
+
+The total for a line item is calculated as:
+
+```
+line_total = (base_price + size_modifier + topping_extras) × quantity
+```
+
+For example, a large Pepperoni (`base_price` $13.99, `size_modifier` +$4.00) with `extra_cheese` (+$1.00) and `mushrooms` (+$0.75), quantity 2:
+
+```
+line_total = ($13.99 + $4.00 + $1.00 + $0.75) × 2
+           = $19.74 × 2
+           = $39.48
+```
+
+The order `total` in the API response is the sum of all line item totals plus any applicable delivery fee and taxes.

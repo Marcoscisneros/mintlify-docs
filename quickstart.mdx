@@ -1,47 +1,236 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Quickstart: Place Your First Pizza Order via API"
+sidebarTitle: "Quickstart"
+description: "Learn how to authenticate, browse the menu, and place your first pizza order using the Pizza API in under 5 minutes."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+This guide walks you through the entire Pizza API flow from scratch. By the end you'll have authenticated successfully, browsed the live menu, placed a real order, and retrieved its delivery status — all with plain HTTP calls. No SDK required.
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
 
-    ```bash
-    npm install your-package
-    ```
+  <Step title="Get your API key">
+    [Sign up for a Pizza API account](https://dashboard.pizzaapi.com/signup) if you haven't already. Once you're in the dashboard, navigate to **Settings → API Keys** and copy your key. Keep it somewhere safe — you'll use it in every request.
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
 
-    ```bash
-    your-cli init
-    ```
-  </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+  <Step title="Make your first request">
+    Verify your key is working by calling the menu endpoint. Replace `YOUR_API_KEY` with the key you copied above.
 
-    ```bash
-    your-cli start
+    <CodeGroup>
+
+    ```bash curl
+    curl https://api.pizzaapi.com/v1/menu \
+      -H "Authorization: Bearer YOUR_API_KEY"
     ```
+
+    ```javascript JavaScript
+    const response = await fetch("https://api.pizzaapi.com/v1/menu", {
+      headers: {
+        Authorization: "Bearer YOUR_API_KEY",
+      },
+    });
+
+    const menu = await response.json();
+    console.log(menu);
+    ```
+
+    ```python Python
+    import requests
+
+    response = requests.get(
+        "https://api.pizzaapi.com/v1/menu",
+        headers={"Authorization": "Bearer YOUR_API_KEY"},
+    )
+
+    print(response.json())
+    ```
+
+    </CodeGroup>
+
+    A `200 OK` response confirms your key is valid and you're ready to move on.
   </Step>
+
+  <Step title="Browse menu items">
+    The `/menu` endpoint returns the full list of orderable items. Here's a sample response showing two pizzas:
+
+    ```json Sample GET /menu response
+    {
+      "object": "list",
+      "data": [
+        {
+          "id": "pizza_margherita",
+          "name": "Margherita",
+          "description": "San Marzano tomato sauce, fresh mozzarella, and basil on a hand-tossed crust.",
+          "sizes": [
+            { "size": "small",  "price_cents": 999  },
+            { "size": "medium", "price_cents": 1299 },
+            { "size": "large",  "price_cents": 1599 }
+          ],
+          "available_toppings": ["extra_cheese", "basil", "mushrooms", "olives"]
+        },
+        {
+          "id": "pizza_pepperoni",
+          "name": "Pepperoni",
+          "description": "Classic tomato sauce layered with whole-milk mozzarella and cup-and-char pepperoni.",
+          "sizes": [
+            { "size": "small",  "price_cents": 1099 },
+            { "size": "medium", "price_cents": 1399 },
+            { "size": "large",  "price_cents": 1699 }
+          ],
+          "available_toppings": ["extra_cheese", "jalapeños", "onions", "bell_peppers"]
+        }
+      ]
+    }
+    ```
+
+    Use the `id` values (e.g. `pizza_margherita`) when building your order in the next step.
+  </Step>
+
+  <Step title="Place an order">
+    Send a `POST` request to `/orders` with the customer, items, and delivery address in the request body.
+
+    <CodeGroup>
+
+    ```bash curl
+    curl -X POST https://api.pizzaapi.com/v1/orders \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "customer_id": "cus_abc123",
+        "items": [
+          {
+            "menu_item_id": "pizza_margherita",
+            "size": "large",
+            "quantity": 1,
+            "toppings": ["extra_cheese", "basil"]
+          }
+        ],
+        "delivery_address": {
+          "street": "123 Main St",
+          "city": "San Francisco",
+          "state": "CA",
+          "zip": "94102"
+        }
+      }'
+    ```
+
+    ```javascript JavaScript
+    const response = await fetch("https://api.pizzaapi.com/v1/orders", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer YOUR_API_KEY",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        customer_id: "cus_abc123",
+        items: [
+          {
+            menu_item_id: "pizza_margherita",
+            size: "large",
+            quantity: 1,
+            toppings: ["extra_cheese", "basil"],
+          },
+        ],
+        delivery_address: {
+          street: "123 Main St",
+          city: "San Francisco",
+          state: "CA",
+          zip: "94102",
+        },
+      }),
+    });
+
+    const order = await response.json();
+    console.log(order);
+    ```
+
+    ```python Python
+    import requests
+
+    payload = {
+        "customer_id": "cus_abc123",
+        "items": [
+            {
+                "menu_item_id": "pizza_margherita",
+                "size": "large",
+                "quantity": 1,
+                "toppings": ["extra_cheese", "basil"],
+            }
+        ],
+        "delivery_address": {
+            "street": "123 Main St",
+            "city": "San Francisco",
+            "state": "CA",
+            "zip": "94102",
+        },
+    }
+
+    response = requests.post(
+        "https://api.pizzaapi.com/v1/orders",
+        json=payload,
+        headers={"Authorization": "Bearer YOUR_API_KEY"},
+    )
+
+    print(response.json())
+    ```
+
+    </CodeGroup>
+
+    A successful response returns the new order object:
+
+    ```json Sample POST /orders response
+    {
+      "id": "ord_7x9kLmQ3",
+      "status": "pending",
+      "customer_id": "cus_abc123",
+      "items": [
+        {
+          "menu_item_id": "pizza_margherita",
+          "size": "large",
+          "quantity": 1,
+          "toppings": ["extra_cheese", "basil"]
+        }
+      ],
+      "delivery_address": {
+        "street": "123 Main St",
+        "city": "San Francisco",
+        "state": "CA",
+        "zip": "94102"
+      },
+      "estimated_delivery_time": "2024-07-15T19:45:00Z",
+      "created_at": "2024-07-15T19:15:00Z"
+    }
+    ```
+
+    Save the `id` value (e.g. `ord_7x9kLmQ3`) — you'll use it to track the delivery.
+  </Step>
+
+  <Step title="Track your order">
+    Poll `GET /delivery/{order_id}/status` at any time to get live delivery information.
+
+    ```bash curl
+    curl https://api.pizzaapi.com/v1/delivery/ord_7x9kLmQ3/status \
+      -H "Authorization: Bearer YOUR_API_KEY"
+    ```
+
+    ```json Sample delivery status response
+    {
+      "order_id": "ord_7x9kLmQ3",
+      "status": "in_transit",
+      "driver": {
+        "name": "Alex R.",
+        "phone": "+14155550192",
+        "vehicle": "Honda Civic — 7KZP482"
+      },
+      "estimated_arrival": "2024-07-15T19:45:00Z",
+      "last_updated": "2024-07-15T19:32:00Z"
+    }
+    ```
+
+    Possible `status` values are `pending`, `preparing`, `in_transit`, and `delivered`.
+  </Step>
+
 </Steps>
 
 <Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
-
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+  Want to learn more? Check out the [Authentication guide](/authentication) for details on API key types and security best practices, or jump into the [API Reference](/api-reference) for the full list of available endpoints.
 </Tip>

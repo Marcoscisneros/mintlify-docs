@@ -1,0 +1,185 @@
+---
+title: "GET /orders/{id} — Retrieve an Order"
+sidebarTitle: "Get Order"
+description: "GET /orders/{id} — Fetches the full order object including status, line items, pricing, and delivery address for a given order ID."
+---
+
+Retrieve the full details of a specific order, including its current status, all line items with resolved pricing, the delivery address, and estimated delivery time. Use this endpoint to display order confirmation screens or to poll for status updates.
+
+```
+GET https://api.pizzaapi.com/v1/orders/{id}
+```
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the order to retrieve (e.g. `order_55ABCD112233`).
+</ParamField>
+
+## Example Request
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.pizzaapi.com/v1/orders/order_55ABCD112233 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const orderId = "order_55ABCD112233";
+
+const response = await fetch(
+  `https://api.pizzaapi.com/v1/orders/${orderId}`,
+  {
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+    },
+  }
+);
+
+const order = await response.json();
+console.log(order);
+```
+
+</CodeGroup>
+
+## Response
+
+```json
+{
+  "id": "order_55ABCD112233",
+  "status": "preparing",
+  "customer_id": "cust_98ZABC987XYZ",
+  "items": [
+    {
+      "menu_item_id": "item_01HXYZ123ABC",
+      "name": "Margherita Classic",
+      "size": "large",
+      "quantity": 1,
+      "toppings": ["topping_extra_cheese", "topping_olives"],
+      "special_instructions": "Well-done crust please.",
+      "unit_price": 17.99,
+      "line_total": 17.99
+    },
+    {
+      "menu_item_id": "item_03HXYZ789GHI",
+      "name": "Garlic Breadsticks",
+      "size": "medium",
+      "quantity": 2,
+      "toppings": [],
+      "special_instructions": null,
+      "unit_price": 6.99,
+      "line_total": 13.98
+    }
+  ],
+  "subtotal": 31.97,
+  "tax": 2.88,
+  "total": 34.85,
+  "delivery_address": {
+    "street": "742 Evergreen Terrace",
+    "city": "Springfield",
+    "state": "IL",
+    "zip": "62704",
+    "country": "US"
+  },
+  "created_at": "2024-06-15T14:23:00Z",
+  "estimated_delivery_time": "2024-06-15T15:08:00Z"
+}
+```
+
+## Response Fields
+
+<ResponseField name="id" type="string">
+  Unique identifier for the order.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current lifecycle status of the order. Possible values:
+
+  | Value | Description |
+  |---|---|
+  | `pending` | Order placed but not yet confirmed by the kitchen. |
+  | `confirmed` | Kitchen has accepted the order. |
+  | `preparing` | Order is being prepared. |
+  | `out_for_delivery` | Order is on its way. |
+  | `delivered` | Order has been delivered. |
+  | `cancelled` | Order was cancelled. |
+</ResponseField>
+
+<ResponseField name="customer_id" type="string">
+  ID of the customer who placed the order.
+</ResponseField>
+
+<ResponseField name="items" type="array">
+  Array of line items in the order with full pricing details.
+
+  <Expandable title="Line item fields">
+    <ResponseField name="items[].menu_item_id" type="string">
+      ID of the ordered menu item.
+    </ResponseField>
+
+    <ResponseField name="items[].name" type="string">
+      Display name of the menu item at the time of ordering.
+    </ResponseField>
+
+    <ResponseField name="items[].size" type="string">
+      Size selected for this line item: `small`, `medium`, or `large`.
+    </ResponseField>
+
+    <ResponseField name="items[].quantity" type="integer">
+      Quantity ordered for this line item.
+    </ResponseField>
+
+    <ResponseField name="items[].toppings" type="array">
+      Array of topping IDs applied to this line item.
+    </ResponseField>
+
+    <ResponseField name="items[].special_instructions" type="string | null">
+      Special preparation instructions, or `null` if none were provided.
+    </ResponseField>
+
+    <ResponseField name="items[].unit_price" type="number">
+      Price per unit for this item and size in USD.
+    </ResponseField>
+
+    <ResponseField name="items[].line_total" type="number">
+      Total price for this line item (`unit_price × quantity`) in USD.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="subtotal" type="number">
+  Sum of all line item totals before tax, in USD.
+</ResponseField>
+
+<ResponseField name="tax" type="number">
+  Calculated tax amount for this order, in USD.
+</ResponseField>
+
+<ResponseField name="total" type="number">
+  Final order total including tax, in USD.
+</ResponseField>
+
+<ResponseField name="delivery_address" type="object">
+  The delivery address for this order.
+
+  <Expandable title="Address fields">
+    <ResponseField name="delivery_address.street" type="string">Street address.</ResponseField>
+    <ResponseField name="delivery_address.city" type="string">City name.</ResponseField>
+    <ResponseField name="delivery_address.state" type="string">State abbreviation.</ResponseField>
+    <ResponseField name="delivery_address.zip" type="string">ZIP or postal code.</ResponseField>
+    <ResponseField name="delivery_address.country" type="string">Country code.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the order was created.
+</ResponseField>
+
+<ResponseField name="estimated_delivery_time" type="string">
+  ISO 8601 timestamp of the estimated delivery window.
+</ResponseField>
+
+<Note>
+  To list all orders for a specific customer, use `GET /orders?customer_id={id}`. This is useful for building order history views.
+</Note>

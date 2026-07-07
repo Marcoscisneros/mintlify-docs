@@ -1,0 +1,120 @@
+---
+title: "Track Pizza Delivery Status and ETA in Real Time"
+sidebarTitle: "Track Delivery"
+description: "Learn how to fetch live delivery status, display ETAs, and surface driver details using the Pizza API delivery endpoints."
+---
+
+The Pizza API delivery endpoints let you build rich real-time tracking experiences — show customers exactly where their order is, who's delivering it, and when it will arrive. This guide covers fetching live status, retrieving pre-dispatch estimates, understanding the full status lifecycle, and choosing the right strategy for keeping your UI up to date.
+
+## Get delivery status
+
+Once an order has been dispatched, call `GET /delivery/{order_id}/status` to retrieve the current status, driver details, and estimated arrival time.
+
+<CodeGroup>
+  ```bash curl
+  curl --request GET \
+    --url https://api.pizzaapi.com/delivery/ord_xyz789/status \
+    --header 'Authorization: Bearer YOUR_API_KEY'
+  ```
+
+  ```javascript JavaScript (fetch)
+  const response = await fetch(
+    "https://api.pizzaapi.com/delivery/ord_xyz789/status",
+    {
+      headers: {
+        Authorization: "Bearer YOUR_API_KEY",
+      },
+    }
+  );
+
+  const status = await response.json();
+  console.log(status);
+  ```
+</CodeGroup>
+
+```json Response
+{
+  "order_id": "ord_xyz789",
+  "status": "in_transit",
+  "driver": {
+    "name": "Marco R.",
+    "phone": "+1-555-0199",
+    "vehicle": "Red Honda Civic"
+  },
+  "estimated_delivery_at": "2024-01-15T19:45:00Z",
+  "delivered_at": null
+}
+```
+
+The `delivered_at` field is `null` until the driver marks the order as delivered, at which point it is set to the delivery timestamp.
+
+## Get delivery estimate before dispatch
+
+Even before a driver is assigned, you can surface an ETA to your customer by calling `GET /delivery/{order_id}/estimate`. This endpoint is available as soon as the order reaches `confirmed` status.
+
+```
+GET /delivery/ord_xyz789/estimate
+```
+
+```json Response
+{
+  "order_id": "ord_xyz789",
+  "estimated_minutes": 35,
+  "estimated_delivery_at": "2024-01-15T19:45:00Z"
+}
+```
+
+Use this to set initial customer expectations right after order confirmation, before any driver details are available.
+
+## Status lifecycle
+
+An order moves through the following statuses from placement to delivery:
+
+| Status | Meaning | Suggested UI |
+|---|---|---|
+| `pending` | Awaiting driver assignment | "Order confirmed" |
+| `assigned` | Driver heading to the kitchen | "Preparing your order" |
+| `picked_up` | Driver has the pizza | "On the way!" |
+| `in_transit` | En route to the customer | "Arriving in X mins" |
+| `delivered` | Order successfully delivered | "Enjoy your pizza!" |
+
+## Polling vs webhooks
+
+### Polling
+
+For simple implementations or low-traffic use cases, you can poll the status endpoint on a regular interval:
+
+```javascript Polling every 30 seconds
+const ORDER_ID = "ord_xyz789";
+const POLL_INTERVAL_MS = 30_000;
+
+const pollDeliveryStatus = async () => {
+  const response = await fetch(
+    `https://api.pizzaapi.com/delivery/${ORDER_ID}/status`,
+    {
+      headers: { Authorization: "Bearer YOUR_API_KEY" },
+    }
+  );
+
+  const data = await response.json();
+  console.log("Current status:", data.status);
+
+  if (data.status === "delivered") {
+    console.log("Order delivered! Stopping poll.");
+    clearInterval(intervalId);
+  }
+};
+
+const intervalId = setInterval(pollDeliveryStatus, POLL_INTERVAL_MS);
+pollDeliveryStatus(); // fire immediately on start
+```
+
+<Note>
+  The delivery status endpoint enforces a rate limit of **1 request per 30 seconds per order**. Polling more frequently will result in `429 Too Many Requests` responses. Set your interval to at least 30 seconds.
+</Note>
+
+### Webhooks (recommended for production)
+
+For production applications, use [webhooks](/guides/webhooks) instead of polling. Webhooks push a notification to your server the moment a status change occurs, eliminating unnecessary requests and giving your customers faster updates with no extra load on your infrastructure.
+
+See the [Webhooks guide](/guides/webhooks) for full setup instructions, payload schemas, and signature verification.

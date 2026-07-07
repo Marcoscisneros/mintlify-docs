@@ -1,0 +1,220 @@
+---
+title: "POST /customers — Create a New Customer Profile"
+sidebarTitle: "Create Customer"
+description: "POST /customers — Creates a new customer profile with name, email, phone, and delivery address. Returns the customer ID for future orders."
+---
+
+Creating a customer profile is the first step to placing orders with the Pizza API. Once created, the returned `customer_id` can be attached to any order, enabling saved addresses, order history, and personalized delivery preferences.
+
+## Endpoint
+
+```
+POST https://api.pizzaapi.com/v1/customers
+```
+
+## Request Body
+
+<ParamField body="name" type="string" required>
+  The customer's full name as it should appear on receipts and delivery labels.
+</ParamField>
+
+<ParamField body="email" type="string" required>
+  The customer's email address. Must be unique across all customer profiles — a `409 Conflict` is returned if the address is already registered.
+</ParamField>
+
+<ParamField body="phone" type="string">
+  The customer's phone number in [E.164 format](https://en.wikipedia.org/wiki/E.164) (e.g. `+15550001234`). Used for delivery notifications and driver contact.
+</ParamField>
+
+<ParamField body="addresses" type="array">
+  An optional list of delivery addresses to associate with the customer profile at creation time. Additional addresses can be added later via `PATCH /customers/{id}`.
+
+  <Expandable title="address object">
+    <ParamField body="addresses[].label" type="string">
+      A friendly label for the address, such as `"Home"` or `"Work"`. Displayed in the customer portal and order confirmations.
+    </ParamField>
+
+    <ParamField body="addresses[].street" type="string" required>
+      The full street address including house or apartment number (e.g. `"742 Evergreen Terrace, Apt 2"`).
+    </ParamField>
+
+    <ParamField body="addresses[].city" type="string" required>
+      The city name.
+    </ParamField>
+
+    <ParamField body="addresses[].state" type="string" required>
+      The two-letter state abbreviation (e.g. `"CA"`, `"NY"`).
+    </ParamField>
+
+    <ParamField body="addresses[].zip" type="string" required>
+      The ZIP or postal code (e.g. `"90210"`).
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Example Request
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url https://api.pizzaapi.com/v1/customers \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "name": "Jamie Hernandez",
+    "email": "jamie.hernandez@example.com",
+    "phone": "+15550019876",
+    "addresses": [
+      {
+        "label": "Home",
+        "street": "742 Evergreen Terrace",
+        "city": "Springfield",
+        "state": "IL",
+        "zip": "62701"
+      }
+    ]
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.pizzaapi.com/v1/customers', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    name: 'Jamie Hernandez',
+    email: 'jamie.hernandez@example.com',
+    phone: '+15550019876',
+    addresses: [
+      {
+        label: 'Home',
+        street: '742 Evergreen Terrace',
+        city: 'Springfield',
+        state: 'IL',
+        zip: '62701',
+      },
+    ],
+  }),
+});
+
+const customer = await response.json();
+console.log(customer.id); // e.g. "cus_a1b2c3d4"
+```
+
+```python Python
+import httpx
+
+payload = {
+    "name": "Jamie Hernandez",
+    "email": "jamie.hernandez@example.com",
+    "phone": "+15550019876",
+    "addresses": [
+        {
+            "label": "Home",
+            "street": "742 Evergreen Terrace",
+            "city": "Springfield",
+            "state": "IL",
+            "zip": "62701",
+        }
+    ],
+}
+
+response = httpx.post(
+    "https://api.pizzaapi.com/v1/customers",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json=payload,
+)
+
+customer = response.json()
+print(customer["id"])  # e.g. "cus_a1b2c3d4"
+```
+
+</CodeGroup>
+
+## Response
+
+Returns the newly created customer object with a `201 Created` status.
+
+```json
+{
+  "id": "cus_a1b2c3d4",
+  "name": "Jamie Hernandez",
+  "email": "jamie.hernandez@example.com",
+  "phone": "+15550019876",
+  "addresses": [
+    {
+      "id": "adr_z9y8x7w6",
+      "label": "Home",
+      "street": "742 Evergreen Terrace",
+      "city": "Springfield",
+      "state": "IL",
+      "zip": "62701"
+    }
+  ],
+  "default_address_id": "adr_z9y8x7w6",
+  "created_at": "2024-01-15T18:00:00Z"
+}
+```
+
+### Response Fields
+
+<ResponseField name="id" type="string">
+  The unique identifier for the customer. Use this value as `customer_id` when creating orders.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The customer's full name as provided.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  The customer's registered email address.
+</ResponseField>
+
+<ResponseField name="phone" type="string">
+  The customer's phone number in E.164 format. `null` if not provided.
+</ResponseField>
+
+<ResponseField name="addresses" type="array">
+  The list of saved delivery addresses associated with this customer.
+
+  <Expandable title="address object">
+    <ResponseField name="addresses[].id" type="string">
+      The unique identifier for this address. Used when setting `default_address_id`.
+    </ResponseField>
+
+    <ResponseField name="addresses[].label" type="string">
+      The friendly label for the address (e.g. `"Home"`, `"Work"`). `null` if not provided.
+    </ResponseField>
+
+    <ResponseField name="addresses[].street" type="string">
+      The full street address.
+    </ResponseField>
+
+    <ResponseField name="addresses[].city" type="string">
+      The city name.
+    </ResponseField>
+
+    <ResponseField name="addresses[].state" type="string">
+      The two-letter state abbreviation.
+    </ResponseField>
+
+    <ResponseField name="addresses[].zip" type="string">
+      The ZIP or postal code.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="default_address_id" type="string">
+  The `id` of the address used by default for new orders. Automatically set to the first address provided, or `null` if no addresses were included.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp indicating when the customer profile was created.
+</ResponseField>
+
+<Note>
+  The `id` field in the response is your `customer_id`. Store it in your own system — you will pass it with every order request to associate orders with this customer profile.
+</Note>

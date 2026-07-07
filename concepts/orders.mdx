@@ -1,0 +1,123 @@
+---
+title: "Orders: Lifecycle, Statuses, and Line Items"
+sidebarTitle: "Orders"
+description: "Learn how Pizza API models orders, tracks status transitions, and structures line items so you can manage the full order lifecycle in your app."
+---
+
+An order in Pizza API represents a complete customer request — from the moment a customer submits their cart through to delivery confirmation. Each order ties together a customer, one or more line items, pricing details, a delivery address, and a live status that moves through a defined lifecycle. Understanding the order model lets you build reliable checkout flows, real-time status displays, and post-order management features.
+
+## Order object
+
+A fully created order contains the following fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | Unique order identifier |
+| `customer_id` | string | ID of the customer who placed the order |
+| `status` | string | Current lifecycle status (see below) |
+| `items` | array | List of line item objects included in the order |
+| `subtotal` | number | Sum of all line totals before tax |
+| `tax` | number | Calculated tax amount |
+| `total` | number | Final charge amount (`subtotal + tax`) |
+| `delivery_address` | object | Full address the order is being delivered to |
+| `created_at` | string | ISO 8601 timestamp when the order was created |
+| `updated_at` | string | ISO 8601 timestamp of the last update |
+
+Here's an example order object:
+
+```json
+{
+  "id": "ord_a1b2c3d4",
+  "customer_id": "cus_9z8y7x",
+  "status": "confirmed",
+  "items": [
+    {
+      "menu_item_id": "item_margherita",
+      "name": "Margherita",
+      "size": "large",
+      "quantity": 1,
+      "toppings": ["top_extra_cheese", "top_mushrooms"],
+      "unit_price": 15.99,
+      "line_total": 18.49
+    }
+  ],
+  "subtotal": 18.49,
+  "tax": 1.67,
+  "total": 20.16,
+  "delivery_address": {
+    "street": "123 Elm Street",
+    "city": "Springfield",
+    "state": "IL",
+    "zip": "62701",
+    "country": "US"
+  },
+  "created_at": "2024-06-01T18:30:00Z",
+  "updated_at": "2024-06-01T18:31:45Z"
+}
+```
+
+## Order statuses
+
+Orders move through a fixed set of statuses over their lifetime. Once a status advances, it cannot move backwards.
+
+| Status | Meaning |
+|---|---|
+| `pending` | Order received by the API; awaiting kitchen confirmation |
+| `confirmed` | Kitchen has accepted the order and it is queued for preparation |
+| `preparing` | Pizza is actively being made |
+| `out_for_delivery` | A driver has picked up the order and is en route |
+| `delivered` | Order was successfully delivered to the customer |
+| `cancelled` | Order was cancelled before completion |
+
+The typical happy-path flow looks like this:
+
+<Steps>
+  <Step title="pending">
+    Order is created via `POST /orders`. The kitchen has not yet acknowledged it.
+  </Step>
+  <Step title="confirmed">
+    The kitchen accepts the order. Modifications are no longer possible.
+  </Step>
+  <Step title="preparing">
+    Ingredients are being assembled and the pizza is in the oven.
+  </Step>
+  <Step title="out_for_delivery">
+    A driver has collected the order. Delivery tracking becomes active.
+  </Step>
+  <Step title="delivered">
+    The order has arrived at the customer's address. The lifecycle is complete.
+  </Step>
+</Steps>
+
+## Line items
+
+Each entry in the `items` array represents one menu item selection in the order:
+
+| Field | Type | Description |
+|---|---|---|
+| `menu_item_id` | string | ID of the menu item ordered |
+| `name` | string | Name of the item at time of order (snapshot) |
+| `size` | string | Selected size: `small`, `medium`, or `large` |
+| `quantity` | integer | Number of this item ordered |
+| `toppings` | array | List of topping IDs added to this item |
+| `unit_price` | number | Price of a single unit (base price + topping charges) |
+| `line_total` | number | `unit_price × quantity` |
+
+Note that `name` and `unit_price` are snapshotted at the time the order is placed, so historical orders accurately reflect what the customer was charged even if the menu changes later.
+
+## Updating an order
+
+You can modify the `items`, `delivery_address`, or other mutable fields on an order using `PATCH /orders/{id}`.
+
+<Warning>
+  Orders can only be updated while they are in `pending` status. Once the status
+  advances to `confirmed`, the order is locked and update requests will return a
+  `409 Conflict` error. Make sure your checkout UI confirms all details before
+  submission, or implement a brief cancellation window to handle last-minute changes.
+</Warning>
+
+## Cancelling an order
+
+Send a `POST /orders/{id}/cancel` request to cancel an order. Cancellations are accepted as long as the order has not yet reached `preparing` status. Once the kitchen starts making the pizza, cancellation is no longer available through the API.
+
+A successful cancellation transitions the order status to `cancelled` and, where applicable, triggers a refund through your configured payment provider. Check the `cancelled_at` field on the response for the exact cancellation timestamp.

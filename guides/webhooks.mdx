@@ -1,0 +1,151 @@
+---
+title: "Receive Real-Time Order Updates with Webhooks"
+sidebarTitle: "Webhooks"
+description: "Set up Pizza API webhooks to receive instant HTTP notifications when orders are confirmed, dispatched, or delivered without polling."
+---
+
+Webhooks let the Pizza API push events to your server the moment something meaningful happens — an order is confirmed, a driver picks up the pizza, or a delivery is completed. Instead of repeatedly polling the API and introducing latency, your endpoint receives an HTTP `POST` request with the full event payload within seconds of the state change. This makes your integration faster, cheaper to run, and simpler to reason about.
+
+## Supported events
+
+| Event | Trigger |
+|---|---|
+| `order.confirmed` | Kitchen accepts the order |
+| `order.preparing` | Kitchen starts making the pizza |
+| `order.out_for_delivery` | Driver picks up the order |
+| `order.delivered` | Order successfully delivered |
+| `order.cancelled` | Order is cancelled |
+| `delivery.status_changed` | Any delivery status change |
+
+You can subscribe to individual events or to all events for a given endpoint.
+
+## Registering a webhook endpoint
+
+1. Log in to your [Pizza API Dashboard](https://dashboard.pizzaapi.com).
+2. Navigate to **Webhooks** in the left sidebar.
+3. Click **Add Endpoint**.
+4. Enter your publicly accessible HTTPS URL (e.g. `https://yourapp.com/webhooks/pizza`).
+5. Select the events you want to receive.
+6. Click **Save**. The dashboard will display your webhook secret — copy it now and store it securely.
+
+<Note>
+  Your endpoint must return an HTTP `2xx` status code within **5 seconds** of receiving the request. If it does not, the delivery is considered failed and will be retried. See [Handling failures and retries](#handling-failures-and-retries) below.
+</Note>
+
+## Webhook payload
+
+Every event is delivered as an HTTP `POST` request with a JSON body in the following structure:
+
+```json Example payload — order.out_for_delivery
+{
+  "event": "order.out_for_delivery",
+  "timestamp": "2024-01-15T19:30:00Z",
+  "data": {
+    "order_id": "ord_xyz789",
+    "status": "out_for_delivery",
+    "customer_id": "cus_abc123",
+    "estimated_delivery_at": "2024-01-15T19:45:00Z"
+  }
+}
+```
+
+The `event` field identifies what happened, `timestamp` records when it occurred (ISO 8601, UTC), and `data` contains the event-specific details.
+
+## Verifying webhook signatures
+
+Every request from the Pizza API includes an `X-PizzaAPI-Signature` header containing an HMAC-SHA256 signature of the raw request body, signed with your webhook secret. You must verify this signature before processing any payload to ensure the request genuinely originated from the Pizza API.
+
+<Warning>
+  Always verify the webhook signature before processing any payload. Skipping this step leaves your endpoint vulnerable to spoofed requests.
+</Warning>
+
+<CodeGroup>
+  ```javascript Node.js
+  const crypto = require("crypto");
+
+  function verifyWebhookSignature(rawBody, signatureHeader, secret) {
+    const expectedSignature = crypto
+      .createHmac("sha256", secret)
+      .update(rawBody, "utf8")
+      .digest("hex");
+
+    const trustedSignature = Buffer.from(expectedSignature, "hex");
+    const receivedSignature = Buffer.from(signatureHeader, "hex");
+
+    // Use timingSafeEqual to prevent timing attacks
+    if (trustedSignature.length !== receivedSignature.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(trustedSignature, receivedSignature);
+  }
+
+  // Express example
+  app.post("/webhooks/pizza", express.raw({ type: "application/json" }), (req, res) => {
+    const signature = req.headers["x-pizzaapi-signature"];
+    const isValid = verifyWebhookSignature(req.body, signature, process.env.PIZZA_WEBHOOK_SECRET);
+
+    if (!isValid) {
+      return res.status(401).send("Invalid signature");
+    }
+
+    const event = JSON.parse(req.body);
+    console.log("Received event:", event.event);
+
+    // Handle the event...
+    res.status(200).send("OK");
+  });
+  ```
+
+  ```python Python
+  import hashlib
+  import hmac
+  import os
+
+  def verify_webhook_signature(raw_body: bytes, signature_header: str, secret: str) -> bool:
+      expected_signature = hmac.new(
+          secret.encode("utf-8"),
+          raw_body,
+          hashlib.sha256
+      ).hexdigest()
+
+      return hmac.compare_digest(expected_signature, signature_header)
+
+
+  # Flask example
+  from flask import Flask, request, abort
+  import json
+
+  app = Flask(__name__)
+
+  @app.route("/webhooks/pizza", methods=["POST"])
+  def handle_webhook():
+      signature = request.headers.get("X-PizzaAPI-Signature", "")
+      raw_body = request.get_data()
+
+      if not verify_webhook_signature(raw_body, signature, os.environ["PIZZA_WEBHOOK_SECRET"]):
+          abort(401, "Invalid signature")
+
+      event = json.loads(raw_body)
+      print(f"Received event: {event['event']}")
+
+      # Handle the event...
+      return "OK", 200
+  ```
+</CodeGroup>
+
+## Handling failures and retries
+
+If your endpoint returns a non-`2xx` status code or does not respond within 5 seconds, the Pizza API marks the delivery as failed and automatically retries using exponential backoff:
+
+| Attempt | Delay after previous failure |
+|---|---|
+| 1st retry | 1 minute |
+| 2nd retry | 5 minutes |
+| 3rd retry | 30 minutes |
+
+After three failed retries, the event is marked as undelivered. You can view and manually replay failed events from the **Webhooks** section of your dashboard.
+
+<Tip>
+  Make your webhook handler **idempotent** — design it so that processing the same event more than once has no unintended side effects. A simple approach is to record each processed `(order_id, timestamp)` pair and skip any event you have already handled.
+</Tip>

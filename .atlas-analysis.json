@@ -1,13 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "projectType": "api-service",
+  "projectName": "Pizza API",
+  "projectDescription": "A REST API for building pizza ordering experiences — browse menus, customize orders, manage customers, and track deliveries in real time.",
   "theme": "luma",
-  "name": "Pizza API",
-  "colors": {
-    "primary": "#ef7025",
-    "light": "#eec9bc",
-    "dark": "#4fa1ab"
-  },
-  "favicon": "/favicon.svg",
+  "primaryColor": "#ef7025",
+  "lightColor": "#eec9bc",
+  "darkColor": "#4fa1ab",
   "navigation": {
     "tabs": [
       {
@@ -86,14 +84,25 @@
       }
     ]
   },
-  "navbar": {
-    "primary": {
-      "type": "button",
-      "label": "Get API Key",
-      "href": "https://dashboard.pizzaapi.com/signup"
-    }
-  },
-  "footer": {
-    "socials": {}
-  }
+  "keyFeatures": [
+    "Browse and filter pizza menu items with toppings and sizes",
+    "Create and manage orders with custom pizza configurations",
+    "Real-time delivery tracking and ETA estimation",
+    "Customer profile management and saved addresses",
+    "Webhook notifications for order status changes",
+    "API key authentication with request signing"
+  ],
+  "publicApiSurface": [
+    "GET /menu — list all menu items",
+    "GET /menu/{id} — get a single menu item",
+    "POST /orders — create a new order",
+    "GET /orders/{id} — retrieve an order",
+    "PATCH /orders/{id} — update an order",
+    "DELETE /orders/{id} — cancel an order",
+    "POST /customers — create a customer",
+    "GET /customers/{id} — retrieve a customer",
+    "PATCH /customers/{id} — update a customer",
+    "GET /delivery/{order_id}/status — get delivery status",
+    "GET /delivery/{order_id}/estimate — get delivery ETA"
+  ]
 }

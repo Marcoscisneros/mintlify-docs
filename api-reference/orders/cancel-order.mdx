@@ -1,0 +1,65 @@
+---
+title: "DELETE /orders/{id} — Cancel an Order"
+sidebarTitle: "Cancel Order"
+description: "DELETE /orders/{id} — Cancels an order. Only available while the order has not reached the preparing status. Returns 204 on success."
+---
+
+Cancel an existing order by its ID. Cancellation is permitted while the order status is `pending` or `confirmed`. Once the kitchen begins preparing the order, it can no longer be cancelled through the API.
+
+```
+DELETE https://api.pizzaapi.com/v1/orders/{id}
+```
+
+<Warning>
+  Orders cannot be cancelled once their status has reached `preparing` or later. If the customer needs to cancel at that stage, they must contact support directly. Attempting to cancel a non-cancellable order returns a `409 Conflict` error.
+</Warning>
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the order to cancel (e.g. `order_55ABCD112233`).
+</ParamField>
+
+## Example Request
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE https://api.pizzaapi.com/v1/orders/order_55ABCD112233 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const orderId = "order_55ABCD112233";
+
+const response = await fetch(
+  `https://api.pizzaapi.com/v1/orders/${orderId}`,
+  {
+    method: "DELETE",
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+    },
+  }
+);
+
+if (response.status === 204) {
+  console.log("Order cancelled successfully.");
+}
+```
+
+</CodeGroup>
+
+## Response
+
+On success, the API returns **HTTP `204 No Content`** with an empty response body.
+
+```
+HTTP/1.1 204 No Content
+```
+
+## Error Responses
+
+| Status | Code | Description |
+|---|---|---|
+| `404 Not Found` | `order_not_found` | No order exists with the provided ID. |
+| `409 Conflict` | `order_not_cancellable` | The order status is `preparing`, `out_for_delivery`, or `delivered` and can no longer be cancelled. |

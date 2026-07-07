@@ -1,0 +1,61 @@
+---
+title: "Pizza API: Build Pizza Ordering Into Any App"
+sidebarTitle: "Introduction"
+description: "Pizza API is a REST API for building pizza ordering experiences. Browse menus, place orders, and track deliveries with simple HTTP calls."
+---
+
+Pizza API gives developers everything they need to embed a full pizza ordering workflow into any application. Whether you're building a consumer storefront, a corporate lunch portal, or an automated ordering bot, Pizza API handles the menu, orders, delivery tracking, and customer data so you can focus on the experience.
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Place your first pizza order via API in under 5 minutes.
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Learn how to generate and use your API key to authenticate every request.
+  </Card>
+  <Card title="Place an Order" icon="pizza-slice" href="/guides/place-an-order">
+    Follow a step-by-step guide to building and submitting a complete order.
+  </Card>
+  <Card title="Menu API Reference" icon="book-open" href="/api-reference/menu/list-items">
+    Explore the full menu endpoint: list items, filter by category, and retrieve details.
+  </Card>
+</CardGroup>
+
+## Key Features
+
+Pizza API is designed to cover every stage of the ordering lifecycle — from browsing the menu to doorstep delivery — with a clean, predictable REST interface.
+
+<CardGroup cols={3}>
+  <Card title="Menu Browsing" icon="list">
+    Retrieve the full menu or filter by category. Every item includes available sizes, toppings, and pricing.
+  </Card>
+  <Card title="Custom Orders" icon="sliders">
+    Mix and match toppings, crust types, and sizes to build any order your customers can imagine.
+  </Card>
+  <Card title="Delivery Tracking" icon="truck">
+    Poll or subscribe for real-time order status updates, driver location, and estimated arrival time.
+  </Card>
+  <Card title="Customer Profiles" icon="user">
+    Store saved delivery addresses and retrieve order history so repeat customers check out faster.
+  </Card>
+  <Card title="Webhooks" icon="webhook">
+    Receive instant HTTP callbacks whenever an order status changes — no polling required.
+  </Card>
+  <Card title="Simple Authentication" icon="shield-halved">
+    A single API key passed as a Bearer token in the `Authorization` header is all you need.
+  </Card>
+</CardGroup>
+
+## Base URL
+
+All Pizza API endpoints are served from the following base URL:
+
+```
+https://api.pizzaapi.com/v1
+```
+
+<Note>
+  Every request must be made over **HTTPS** and must include a valid API key in the `Authorization` header. Requests over plain HTTP or without a key will be rejected with a `401 Unauthorized` response.
+</Note>

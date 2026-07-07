@@ -1,0 +1,96 @@
+---
+title: "Customers: Profiles, Addresses, and Order History"
+sidebarTitle: "Customers"
+description: "Learn how Pizza API stores customer profiles, saved delivery addresses, and order history to personalize the ordering experience."
+---
+
+The customer resource represents a person who places orders through your app. Pizza API stores a lightweight profile for each customer — their contact details, one or more saved delivery addresses, and a link to their order history. By maintaining a customer record, you can pre-fill checkout forms, support repeat orders, and personalise the experience without re-collecting information on every visit.
+
+## Customer object
+
+A customer record contains the following fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | Unique customer identifier |
+| `name` | string | Customer's full name |
+| `email` | string | Email address used for order receipts |
+| `phone` | string | Phone number for delivery contact |
+| `addresses` | array | List of saved delivery address objects |
+| `default_address_id` | string | ID of the address pre-selected at checkout |
+| `created_at` | string | ISO 8601 timestamp of when the profile was created |
+
+Here's an example customer object:
+
+```json
+{
+  "id": "cus_9z8y7x",
+  "name": "Alice Johnson",
+  "email": "alice@example.com",
+  "phone": "+1-555-867-5309",
+  "addresses": [
+    {
+      "id": "addr_001",
+      "label": "Home",
+      "street": "123 Elm Street",
+      "city": "Springfield",
+      "state": "IL",
+      "zip": "62701",
+      "country": "US"
+    },
+    {
+      "id": "addr_002",
+      "label": "Work",
+      "street": "456 Oak Avenue, Suite 200",
+      "city": "Springfield",
+      "state": "IL",
+      "zip": "62704",
+      "country": "US"
+    }
+  ],
+  "default_address_id": "addr_001",
+  "created_at": "2024-01-15T09:00:00Z"
+}
+```
+
+## Delivery addresses
+
+Each entry in the `addresses` array is a fully structured sub-object:
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | Unique identifier for this address |
+| `label` | string | Friendly name shown to the customer (e.g. `"Home"`, `"Work"`) |
+| `street` | string | Street number and name, including unit or suite if applicable |
+| `city` | string | City name |
+| `state` | string | State or province |
+| `zip` | string | Postal or ZIP code |
+| `country` | string | ISO 3166-1 alpha-2 country code (e.g. `"US"`) |
+
+A single customer can store multiple delivery addresses. At checkout, your app can present the full list and let the customer choose, with `default_address_id` pre-selected. Use `PATCH /customers/{id}` to add, update, or remove addresses, or to change which one is the default.
+
+## Order history
+
+Retrieve all past orders for a customer by passing their ID as a query parameter to the orders endpoint:
+
+```bash
+curl "https://api.pizzaapi.com/v1/orders?customer_id=cus_9z8y7x" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+The response is a paginated list of order objects, sorted by `created_at` descending (most recent first). You can combine this with other filters — for example, `&status=delivered` — to show only completed orders in a purchase history screen.
+
+## Creating vs identifying customers
+
+Customer records are created once and reused across all future interactions:
+
+1. **Create** — call `POST /customers` with the customer's `name`, `email`, and `phone` the first time they sign up in your app. Pizza API returns a `customer_id`.
+2. **Reuse** — pass the same `customer_id` in every subsequent `POST /orders` request. Pizza API links the order to the existing profile automatically.
+
+You never need to create a customer more than once. Duplicate creation attempts with the same email address return a `409 Conflict` error along with the existing customer record, so your app can recover gracefully.
+
+<Tip>
+  Persist the `customer_id` returned from `POST /customers` in your own user
+  database, mapped to your internal user ID. This makes it trivial to look up
+  the Pizza API customer record whenever a logged-in user goes to place an order.
+</Tip>
