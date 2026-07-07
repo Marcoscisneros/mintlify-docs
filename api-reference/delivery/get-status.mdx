@@ -4,7 +4,7 @@ sidebarTitle: "Delivery Status"
 description: "GET /delivery/{order_id}/status — Returns the current delivery status, driver details, and estimated delivery time for an active order."
 ---
 
-Poll this endpoint to get the real-time delivery status of an active order. The response includes the current status stage, assigned driver information, and the latest estimated delivery timestamp. Tracking information becomes available once the order transitions to the `out_for_delivery` stage.
+Poll this endpoint to get the real-time delivery status of an active order. The response includes the current status stage, assigned driver information, and the latest estimated delivery timestamp. Tracking information becomes available once the order transitions to the `assigned` stage.
 
 ## Endpoint
 
@@ -45,6 +45,21 @@ console.log(status.status);          // "in_transit"
 console.log(status.driver.name);     // "Marco R."
 ```
 
+```python Python
+import requests
+
+order_id = 'ord_xyz789'
+
+response = requests.get(
+    f"https://api.pizzaapi.com/v1/delivery/{order_id}/status",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+)
+
+status = response.json()
+print(status["status"])         # "in_transit"
+print(status["driver"]["name"]) # "Marco R."
+```
+
 </CodeGroup>
 
 ## Response
@@ -77,13 +92,11 @@ Returns the delivery status object with a `200 OK` status.
 
   | Value | Description |
   |---|---|
-  | `confirmed` | Order accepted, not yet being prepared. |
-  | `preparing` | Kitchen is actively preparing the order. |
-  | `ready_for_pickup` | Order is ready; awaiting driver assignment. |
-  | `out_for_delivery` | Driver has picked up the order. |
+  | `pending` | Order received, not yet assigned to a driver. |
+  | `assigned` | A driver has been assigned to the order. |
+  | `picked_up` | Driver has picked up the order from the restaurant. |
   | `in_transit` | Driver is en route to the delivery address. |
   | `delivered` | Order has been successfully delivered. |
-  | `cancelled` | Order was cancelled before delivery. |
 </ResponseField>
 
 <ResponseField name="driver" type="object">

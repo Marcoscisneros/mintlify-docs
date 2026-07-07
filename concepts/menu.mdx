@@ -1,7 +1,7 @@
 ---
-title: "Menu Items: Pizzas, Toppings, and Sizes Explained"
+title: "Menu Items: Pizzas, Toppings, and Sizes in Pizza API"
 sidebarTitle: "Menu"
-description: "Understand how Pizza API structures menu items, sizes, and toppings so you can display choices and build order forms in your app."
+description: "Understand how Pizza API structures menu items, sizes, and toppings so you can display choices and build order forms in your app easily."
 ---
 
 The menu resource is the foundation of every ordering experience built on Pizza API. It exposes the full catalog of items your customers can order — pizzas, sides, and drinks — along with their available sizes, pricing tiers, and topping options. By fetching the menu at runtime, your app always reflects the latest offerings without requiring a manual update on your end.
@@ -44,6 +44,17 @@ Here's an example menu item object for a Margherita pizza:
   "is_available": true
 }
 ```
+
+## Fetching a single item
+
+Use `GET /menu/{id}` to retrieve a specific menu item by its ID. This is useful when you need to display a detail page or validate a selection before building an order.
+
+```bash
+curl https://api.pizzaapi.com/v1/menu/item_margherita \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+The response is a single menu item object in the same shape shown above.
 
 ## Sizes
 

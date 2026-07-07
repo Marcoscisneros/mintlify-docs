@@ -1,5 +1,5 @@
 ---
-title: "GET /orders/{id} — Retrieve an Order"
+title: "GET /orders/{id} — Retrieve Order Details and Status"
 sidebarTitle: "Get Order"
 description: "GET /orders/{id} — Fetches the full order object including status, line items, pricing, and delivery address for a given order ID."
 ---
@@ -180,6 +180,4 @@ console.log(order);
   ISO 8601 timestamp of the estimated delivery window.
 </ResponseField>
 
-<Note>
-  To list all orders for a specific customer, use `GET /orders?customer_id={id}`. This is useful for building order history views.
-</Note>
+

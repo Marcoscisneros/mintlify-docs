@@ -1,7 +1,7 @@
 ---
-title: "Track Pizza Delivery Status and ETA in Real Time"
+title: "Track Your Pizza Delivery Status and ETA in Real Time"
 sidebarTitle: "Track Delivery"
-description: "Learn how to fetch live delivery status, display ETAs, and surface driver details using the Pizza API delivery endpoints."
+description: "Use the Pizza API delivery endpoints to fetch live order status, display arrival estimates, and surface driver details for your customers."
 ---
 
 The Pizza API delivery endpoints let you build rich real-time tracking experiences — show customers exactly where their order is, who's delivering it, and when it will arrive. This guide covers fetching live status, retrieving pre-dispatch estimates, understanding the full status lifecycle, and choosing the right strategy for keeping your UI up to date.
@@ -13,13 +13,13 @@ Once an order has been dispatched, call `GET /delivery/{order_id}/status` to ret
 <CodeGroup>
   ```bash curl
   curl --request GET \
-    --url https://api.pizzaapi.com/delivery/ord_xyz789/status \
+    --url https://api.pizzaapi.com/v1/delivery/ord_xyz789/status \
     --header 'Authorization: Bearer YOUR_API_KEY'
   ```
 
   ```javascript JavaScript (fetch)
   const response = await fetch(
-    "https://api.pizzaapi.com/delivery/ord_xyz789/status",
+    "https://api.pizzaapi.com/v1/delivery/ord_xyz789/status",
     {
       headers: {
         Authorization: "Bearer YOUR_API_KEY",
@@ -90,7 +90,7 @@ const POLL_INTERVAL_MS = 30_000;
 
 const pollDeliveryStatus = async () => {
   const response = await fetch(
-    `https://api.pizzaapi.com/delivery/${ORDER_ID}/status`,
+    `https://api.pizzaapi.com/v1/delivery/${ORDER_ID}/status`,
     {
       headers: { Authorization: "Bearer YOUR_API_KEY" },
     }

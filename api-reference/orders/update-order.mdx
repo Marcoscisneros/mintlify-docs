@@ -1,7 +1,7 @@
 ---
-title: "PATCH /orders/{id} — Update a Pending Order"
+title: "PATCH /orders/{id} — Update a Pending Pizza Order"
 sidebarTitle: "Update Order"
-description: "PATCH /orders/{id} — Updates items or delivery address on a pending order. Only allowed while the order status is pending."
+description: "PATCH /orders/{id} — Updates line items or delivery address on a pending order. Returns the full updated order. Only allowed while status is pending."
 ---
 
 Modify an existing order's line items or delivery address. This endpoint uses partial update semantics — only include the fields you want to change. Providing `items` replaces the entire items array, and providing `delivery_address` replaces the entire delivery address.

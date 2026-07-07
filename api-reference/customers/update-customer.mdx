@@ -1,7 +1,7 @@
 ---
 title: "PATCH /customers/{id} — Update Customer Details"
 sidebarTitle: "Update Customer"
-description: "PATCH /customers/{id} — Updates a customer's name, phone, or saved addresses. Send only the fields you want to change."
+description: "Use PATCH /customers/{id} to update a customer's name, phone, default address, or saved addresses. Send only the fields you want to change."
 ---
 
 This endpoint performs a partial update on an existing customer profile. You only need to include the fields you want to modify — any fields omitted from the request body will remain unchanged. This is useful for updating contact details, adding a new phone number, or changing the customer's preferred delivery address.
@@ -95,6 +95,24 @@ const response = await fetch(
 
 const updated = await response.json();
 console.log(updated.default_address_id); // "adr_m3n4o5p6"
+```
+
+```python Python
+import requests
+
+customer_id = 'cus_a1b2c3d4'
+
+response = requests.patch(
+    f"https://api.pizzaapi.com/v1/customers/{customer_id}",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={
+        "phone": "+15550009999",
+        "default_address_id": "adr_m3n4o5p6",
+    },
+)
+
+updated = response.json()
+print(updated["default_address_id"])  # "adr_m3n4o5p6"
 ```
 
 </CodeGroup>

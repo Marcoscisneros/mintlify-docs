@@ -1,5 +1,5 @@
 ---
-title: "Place a Pizza Order with the Pizza API"
+title: "Place a Pizza Order with the Pizza API: Full Guide"
 sidebarTitle: "Place an Order"
 description: "Step-by-step guide to creating a pizza order with the Pizza API: browse the menu, build your cart, submit the order, and confirm it went through."
 ---
@@ -92,7 +92,7 @@ This guide walks you through the full lifecycle of placing a pizza order using t
     <CodeGroup>
       ```bash curl
       curl --request POST \
-        --url https://api.pizzaapi.com/orders \
+        --url https://api.pizzaapi.com/v1/orders \
         --header 'Authorization: Bearer YOUR_API_KEY' \
         --header 'Content-Type: application/json' \
         --data '{
@@ -111,7 +111,7 @@ This guide walks you through the full lifecycle of placing a pizza order using t
       ```
 
       ```javascript JavaScript (fetch)
-      const response = await fetch("https://api.pizzaapi.com/orders", {
+      const response = await fetch("https://api.pizzaapi.com/v1/orders", {
         method: "POST",
         headers: {
           "Authorization": "Bearer YOUR_API_KEY",

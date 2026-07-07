@@ -1,7 +1,7 @@
 ---
 title: "GET /customers/{id} — Retrieve a Customer Profile"
 sidebarTitle: "Get Customer"
-description: "GET /customers/{id} — Fetches a customer profile by ID, including name, contact details, and saved delivery addresses."
+description: "Use GET /customers/{id} to fetch a customer profile by ID, returning the customer's name, contact details, saved delivery addresses, and default address."
 ---
 
 Use this endpoint to retrieve a complete customer profile by its unique ID. The response includes the customer's contact details, all saved delivery addresses, and the currently configured default address — useful for pre-filling order forms or displaying account information in your application.
@@ -42,6 +42,20 @@ const response = await fetch(
 
 const customer = await response.json();
 console.log(customer.email); // "jamie.hernandez@example.com"
+```
+
+```python Python
+import requests
+
+customer_id = 'cus_a1b2c3d4'
+
+response = requests.get(
+    f"https://api.pizzaapi.com/v1/customers/{customer_id}",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+)
+
+customer = response.json()
+print(customer["email"])  # "jamie.hernandez@example.com"
 ```
 
 </CodeGroup>

@@ -1,5 +1,5 @@
 ---
-title: "Orders: Lifecycle, Statuses, and Line Items"
+title: "Orders: Lifecycle, Statuses, and Line Items Explained"
 sidebarTitle: "Orders"
 description: "Learn how Pizza API models orders, tracks status transitions, and structures line items so you can manage the full order lifecycle in your app."
 ---
@@ -55,6 +55,17 @@ Here's an example order object:
   "updated_at": "2024-06-01T18:31:45Z"
 }
 ```
+
+## Retrieving an order
+
+Use `GET /orders/{id}` to fetch the current state of any order by its ID. This is the primary way to check status, display order details, or confirm a successful placement.
+
+```bash
+curl https://api.pizzaapi.com/v1/orders/ord_a1b2c3d4 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+The response is a single order object in the shape shown above.
 
 ## Order statuses
 
@@ -118,6 +129,11 @@ You can modify the `items`, `delivery_address`, or other mutable fields on an or
 
 ## Cancelling an order
 
-Send a `POST /orders/{id}/cancel` request to cancel an order. Cancellations are accepted as long as the order has not yet reached `preparing` status. Once the kitchen starts making the pizza, cancellation is no longer available through the API.
+Send a `DELETE /orders/{id}` request to cancel an order. Cancellations are accepted as long as the order has not yet reached `preparing` status. Once the kitchen starts making the pizza, cancellation is no longer available through the API.
+
+```bash
+curl -X DELETE https://api.pizzaapi.com/v1/orders/ord_a1b2c3d4 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
 
 A successful cancellation transitions the order status to `cancelled` and, where applicable, triggers a refund through your configured payment provider. Check the `cancelled_at` field on the response for the exact cancellation timestamp.

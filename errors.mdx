@@ -1,5 +1,5 @@
 ---
-title: "Pizza API Error Codes and How to Fix Them"
+title: "Pizza API Error Codes: HTTP Status and Error Reference"
 sidebarTitle: "Error Codes"
 description: "Complete reference for Pizza API HTTP error codes and error response shapes. Learn what each error means and how to resolve it quickly."
 ---
@@ -79,7 +79,7 @@ Each `code` slug maps to a specific failure mode. Expand each entry below for de
   <Accordion title="invalid_topping — Topping not valid for this pizza">
     One or more topping IDs in your request are not compatible with the selected pizza base, or the topping ID does not exist.
 
-    **How to fix:** Fetch the valid toppings for a menu item via `GET /menu/{item_id}/toppings` and ensure all requested toppings are in the returned list.
+    **How to fix:** Fetch the full details for a menu item via `GET /menu/{id}` and confirm that all requested topping IDs appear in the item's `toppings` array before placing the order.
   </Accordion>
 
   <Accordion title="order_not_modifiable — Order is past pending state">

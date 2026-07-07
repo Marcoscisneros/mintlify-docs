@@ -45,6 +45,21 @@ console.log(`Estimated arrival in ${estimate.estimated_minutes} minutes`);
 // "Estimated arrival in 35 minutes"
 ```
 
+```python Python
+import requests
+
+order_id = 'ord_xyz789'
+
+response = requests.get(
+    f"https://api.pizzaapi.com/v1/delivery/{order_id}/estimate",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+)
+
+estimate = response.json()
+print(f"Estimated arrival in {estimate['estimated_minutes']} minutes")
+# "Estimated arrival in 35 minutes"
+```
+
 </CodeGroup>
 
 ## Response
@@ -83,5 +98,5 @@ Returns the delivery estimate object with a `200 OK` status.
 </Note>
 
 <Tip>
-  Estimates are recalculated on every request. For the most accurate ETA, re-fetch this endpoint each time the order's `status` changes — for example, when it transitions from `preparing` to `out_for_delivery`. Displaying `calculated_at` alongside the ETA helps customers understand when the estimate was last refreshed.
+  Estimates are recalculated on every request. For the most accurate ETA, re-fetch this endpoint each time the order's `status` changes — for example, when it transitions from `assigned` to `in_transit`. Displaying `calculated_at` alongside the ETA helps customers understand when the estimate was last refreshed.
 </Tip>

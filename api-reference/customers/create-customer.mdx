@@ -1,7 +1,7 @@
 ---
 title: "POST /customers — Create a New Customer Profile"
 sidebarTitle: "Create Customer"
-description: "POST /customers — Creates a new customer profile with name, email, phone, and delivery address. Returns the customer ID for future orders."
+description: "Use POST /customers to create a new customer profile with name, email, optional phone, and delivery addresses. Returns the customer ID for future orders."
 ---
 
 Creating a customer profile is the first step to placing orders with the Pizza API. Once created, the returned `customer_id` can be attached to any order, enabling saved addresses, order history, and personalized delivery preferences.
@@ -105,7 +105,7 @@ console.log(customer.id); // e.g. "cus_a1b2c3d4"
 ```
 
 ```python Python
-import httpx
+import requests
 
 payload = {
     "name": "Jamie Hernandez",
@@ -122,7 +122,7 @@ payload = {
     ],
 }
 
-response = httpx.post(
+response = requests.post(
     "https://api.pizzaapi.com/v1/customers",
     headers={"Authorization": "Bearer YOUR_API_KEY"},
     json=payload,

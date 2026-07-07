@@ -1,7 +1,7 @@
 ---
-title: "Customers: Profiles, Addresses, and Order History"
+title: "Customers: Profiles, Saved Addresses, and Order History"
 sidebarTitle: "Customers"
-description: "Learn how Pizza API stores customer profiles, saved delivery addresses, and order history to personalize the ordering experience."
+description: "Learn how Pizza API manages customer profiles, saved delivery addresses, and order history to personalize the ordering experience."
 ---
 
 The customer resource represents a person who places orders through your app. Pizza API stores a lightweight profile for each customer — their contact details, one or more saved delivery addresses, and a link to their order history. By maintaining a customer record, you can pre-fill checkout forms, support repeat orders, and personalise the experience without re-collecting information on every visit.
@@ -53,6 +53,17 @@ Here's an example customer object:
 }
 ```
 
+## Retrieving a customer
+
+Use `GET /customers/{id}` to fetch a customer's current profile by their ID. This is the primary way to load saved addresses and pre-fill checkout forms for returning customers.
+
+```bash
+curl https://api.pizzaapi.com/v1/customers/cus_9z8y7x \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+The response is a single customer object in the shape shown above.
+
 ## Delivery addresses
 
 Each entry in the `addresses` array is a fully structured sub-object:
@@ -91,6 +102,6 @@ You never need to create a customer more than once. Duplicate creation attempts 
 
 <Tip>
   Persist the `customer_id` returned from `POST /customers` in your own user
-  database, mapped to your internal user ID. This makes it trivial to look up
+  database, mapped to your application's user ID. This makes it trivial to look up
   the Pizza API customer record whenever a logged-in user goes to place an order.
 </Tip>
