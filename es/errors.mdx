@@ -1,0 +1,58 @@
+---
+title: "Errores de Pizza API: códigos, significado y manejo"
+sidebarTitle: "Errores"
+description: "Referencia de los códigos de error de Pizza API, cuándo se devuelven y cómo manejarlos en tu integración."
+---
+
+Pizza API usa códigos de estado HTTP estándar para indicar el resultado de cada solicitud. Cuando una solicitud falla, el cuerpo de la respuesta contiene un objeto JSON con un `code` estable y un `message` legible que describe el problema, lo que te ayuda a manejar los errores de forma programada y a mostrar mensajes claros a los usuarios.
+
+## Formato de la respuesta de error
+
+Todas las respuestas de error comparten la misma estructura:
+
+```json
+{
+  "error": {
+    "code": "validation_error",
+    "message": "El campo `size` debe ser small, medium o large.",
+    "details": {
+      "field": "items[0].size"
+    }
+  }
+}
+```
+
+El campo `details` es opcional y contiene metadatos específicos del error, como el nombre del campo que falló la validación.
+
+## Códigos de estado comunes
+
+| Estado | Significado |
+| --- | --- |
+| `400 Bad Request` | La solicitud no se pudo procesar. Suele indicar JSON mal formado. |
+| `401 Unauthorized` | Falta la clave de API o no es válida. |
+| `403 Forbidden` | La clave no tiene permiso para acceder al recurso. |
+| `404 Not Found` | El recurso solicitado no existe. |
+| `409 Conflict` | La solicitud entra en conflicto con el estado actual (p. ej. modificar un pedido confirmado). |
+| `422 Unprocessable Entity` | La solicitud está bien formada pero un campo no superó la validación. |
+| `429 Too Many Requests` | Se ha superado el límite de solicitudes. |
+| `500 Internal Server Error` | Error inesperado en el servidor. |
+
+## Límite de solicitudes
+
+Cuando superas el límite de solicitudes, la API responde con `429 Too Many Requests` e incluye una cabecera `Retry-After` con los segundos que debes esperar antes de reintentar.
+
+<Tip>
+  Implementa reintentos con retroceso exponencial para las respuestas `429` y `5xx`. Comienza con un retraso de 1 segundo y duplica el intervalo en cada intento, hasta un máximo de 5 reintentos.
+</Tip>
+
+## Errores de validación frecuentes
+
+| Código | Significado |
+| --- | --- |
+| `validation_error` | Uno o más campos del cuerpo no cumplen las reglas de validación. |
+| `menu_item_not_found` | El `menu_item_id` proporcionado no existe. |
+| `topping_not_allowed` | Se solicitó un ingrediente que no está en `available_toppings` del artículo. |
+| `order_not_modifiable` | El pedido ya no está en estado `pending` y no puede modificarse. |
+| `order_not_cancellable` | El pedido ya se está preparando y no puede cancelarse. |
+
+Siempre inspecciona el `code` (no el `message`) para tomar decisiones en tu código, ya que los mensajes pueden cambiar.

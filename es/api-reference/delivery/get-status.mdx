@@ -1,0 +1,50 @@
+---
+title: "GET /delivery/{order_id}/status — Estado en vivo"
+sidebarTitle: "Estado de entrega"
+description: "GET /delivery/{order_id}/status — Devuelve el estado actual de entrega, datos del repartidor y hora estimada para un pedido activo."
+---
+
+Consulta este endpoint para obtener el estado de entrega en tiempo real de un pedido activo. La respuesta incluye la etapa actual, información del repartidor asignado y la marca de tiempo estimada de entrega más reciente. El seguimiento está disponible una vez el pedido llega a la etapa `assigned`.
+
+## Endpoint
+
+```text
+GET https://api.pizzaapi.com/v1/delivery/{order_id}/status
+```
+
+## Parámetros de ruta
+
+<ParamField path="order_id" type="string" required>
+  ID único del pedido para el que quieres el estado (p. ej. `ord_xyz789`).
+</ParamField>
+
+## Ejemplo de solicitud
+
+```bash cURL
+curl --request GET \
+  --url https://api.pizzaapi.com/v1/delivery/ord_xyz789/status \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+
+## Respuesta
+
+Devuelve el objeto de estado con estado `200 OK`.
+
+```json
+{
+  "order_id": "ord_xyz789",
+  "status": "in_transit",
+  "driver": {
+    "name": "Marco R.",
+    "phone": "+1-555-0199",
+    "vehicle": "Honda Civic rojo"
+  },
+  "estimated_delivery_at": "2024-01-15T19:45:00Z",
+  "delivered_at": null,
+  "updated_at": "2024-01-15T19:28:00Z"
+}
+```
+
+<Warning>
+  Este endpoint está **limitado a 1 solicitud cada 30 segundos por pedido**. Exceder el límite devuelve `429 Too Many Requests` con una cabecera `Retry-After`. Para actualizaciones en tiempo real sin sondeo, recomendamos usar [webhooks](/es/guides/webhooks).
+</Warning>

@@ -1,0 +1,108 @@
+---
+title: "Personaliza pizzas con ingredientes y peticiones especiales"
+sidebarTitle: "Personalizar pizza"
+description: "Configura ingredientes, elige tamaños y añade instrucciones especiales al construir artículos de línea con los endpoints de pedidos de Pizza API."
+---
+
+Pizza API te da control detallado sobre cada pizza de un pedido. Cada artículo de línea puede tener su propio tamaño, una lista de ingredientes tomados de las opciones disponibles del artículo, y un campo de texto libre para instrucciones especiales. Esta guía cubre todos los parámetros de personalización y cómo afectan al precio.
+
+## Elegir un tamaño
+
+Cada pizza del menú admite tres tamaños: `"small"`, `"medium"` y `"large"`. El campo `size` es obligatorio en cada línea. El tamaño afecta directamente al precio unitario — cada paso añade una cantidad fija al `base_price` del artículo.
+
+| Tamaño | Modificador de precio |
+| --- | --- |
+| `small` | Precio base |
+| `medium` | Precio base \+ \$2.00 |
+| `large` | Precio base \+ \$4.00 |
+
+```json Ejemplo de campo size
+{
+  "menu_item_id": "pizza_margherita",
+  "size": "medium",
+  "quantity": 1
+}
+```
+
+## Añadir y quitar ingredientes
+
+El array `toppings` te permite añadir ingredientes extra encima de los estándar de la pizza. Los ingredientes se agrupan en tres categorías:
+
+- **Queso** — `extra_cheese`, `parmesan`, `vegan_cheese`
+- **Carne** — `pepperoni`, `bacon`, `grilled_chicken`, `sausage`
+- **Vegetales** — `mushrooms`, `bell_peppers`, `onions`, `olives`, `jalapeños`, `spinach`
+
+Cada artículo del menú expone su propia lista `available_toppings` (devuelta por `GET /menu`). Solo los ingredientes presentes en esa lista son válidos para el artículo. Cada ingrediente extra tiene un precio por unidad que se suma al subtotal de la línea.
+
+```json Línea con ingredientes extra
+{
+  "menu_item_id": "pizza_pepperoni",
+  "size": "large",
+  "quantity": 2,
+  "toppings": ["extra_cheese", "mushrooms", "bell_peppers"],
+  "special_instructions": "Masa bien cocida por favor"
+}
+```
+
+<Warning>
+  Los ingredientes que no estén en `available_toppings` del artículo provocarán un `422 Unprocessable Entity`. Valida siempre la selección de ingredientes con la respuesta del menú antes de enviar el pedido.
+</Warning>
+
+## Instrucciones especiales
+
+El campo `special_instructions` es una cadena opcional de texto libre con un máximo de **200 caracteres**. Usálo para comunicar cualquier detalle que no se capture con los campos estructurados.
+
+<Tip>
+  Usos comunes: preferencias de masa ("extra crujiente"), notas de alergias ("sin nueces en la cocina, por favor") o preferencias de corte ("córtala en cuadrados").
+</Tip>
+
+```json Ejemplo de instrucciones especiales
+{
+  "menu_item_id": "pizza_margherita",
+  "size": "small",
+  "quantity": 1,
+  "toppings": ["extra_cheese"],
+  "special_instructions": "Sensibilidad al gluten — usen un cortador limpio"
+}
+```
+
+## Múltiples artículos en un pedido
+
+Puedes incluir tantas líneas como necesites en un solo pedido añadiendo objetos al array `items`. Cada uno se personaliza de forma independiente.
+
+```json array items con dos pizzas distintas
+[
+  {
+    "menu_item_id": "pizza_pepperoni",
+    "size": "large",
+    "quantity": 1,
+    "toppings": ["extra_cheese", "jalapeños"],
+    "special_instructions": "Masa extra crujiente"
+  },
+  {
+    "menu_item_id": "pizza_margherita",
+    "size": "medium",
+    "quantity": 2,
+    "toppings": ["mushrooms", "olives", "spinach"],
+    "special_instructions": "Poca salsa por favor"
+  }
+]
+```
+
+## Cálculo del precio
+
+El total de una línea se calcula así:
+
+```text
+line_total = (base_price + size_modifier + topping_extras) × quantity
+```
+
+Por ejemplo, una Pepperoni grande (`base_price` $13.99, `size_modifier` +$4.00) con `extra_cheese` (\+$1.00) y `mushrooms` (+$0.75), cantidad 2:
+
+```text
+line_total = ($13.99 + $4.00 + $1.00 + $0.75) × 2
+           = $19.74 × 2
+           = $39.48
+```
+
+El `total` del pedido en la respuesta de la API es la suma de todos los totales de línea más la tarifa de envío aplicable y los impuestos.

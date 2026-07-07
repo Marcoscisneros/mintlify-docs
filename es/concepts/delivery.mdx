@@ -1,0 +1,82 @@
+---
+title: "Seguimiento de entrega: estado en vivo, ETA e info del repartidor"
+sidebarTitle: "Entrega"
+description: "Entiende cómo Pizza API rastrea las entregas en tiempo real, calcula ETAs y expone la ubicación del repartidor para mantener informados a tus clientes."
+---
+
+La capa de seguimiento de entregas de Pizza API te permite acompañar un pedido desde el momento en que se asigna un repartidor hasta la confirmación final en la puerta. Cubre transiciones de estado en tiempo real, datos de contacto del repartidor, cálculo de ETA y la estrategia recomendada para mostrar actualizaciones en tu app — ya sea con webhooks o mediante sondeo.
+
+## Objeto de estado de entrega
+
+Cuando un pedido entra en la fase de entrega, Pizza API crea un registro de entrega asociado al pedido. Consulta este registro en cualquier momento con `GET /delivery/{order_id}/status`.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `order_id` | string | Pedido al que pertenece este registro |
+| `status` | string | Estado actual (ver transiciones) |
+| `driver` | object | Datos del repartidor: `name`, `phone`, `vehicle` |
+| `estimated_delivery_at` | string | Marca ISO 8601 de la entrega prevista |
+| `delivered_at` | string | Marca ISO 8601 de la entrega real (al completarse) |
+
+Ejemplo de objeto de estado de entrega:
+
+```json
+{
+  "order_id": "ord_a1b2c3d4",
+  "status": "in_transit",
+  "driver": {
+    "name": "Marco Rossi",
+    "phone": "+1-555-234-5678",
+    "vehicle": "Vespa roja · placa ABC-123"
+  },
+  "estimated_delivery_at": "2024-06-01T19:05:00Z",
+  "delivered_at": null
+}
+```
+
+## Transiciones de estado
+
+El estado de entrega sigue una secuencia estricta y solo hacia adelante:
+
+| Paso | Estado | Significado |
+| --- | --- | --- |
+| 1 | `pending` | Aún sin repartidor; en cola para asignación |
+| 2 | `assigned` | Se asignó un repartidor al pedido |
+| 3 | `picked_up` | El repartidor recogió el pedido en el restaurante |
+| 4 | `in_transit` | El repartidor va en camino a la dirección |
+| 5 | `delivered` | El pedido se entregó al cliente |
+
+Cada transición la dispara automáticamente el sistema de despacho de Pizza API o la app móvil del repartidor. Tu integración no necesita avanzar el estado manualmente.
+
+## Estimación de ETA
+
+Antes de que un repartidor recoja el pedido, puedes solicitar una estimación de tiempo de entrega:
+
+```bash
+curl "https://api.pizzaapi.com/v1/delivery/ord_a1b2c3d4/estimate" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+La respuesta incluye una estimación relativa y absoluta:
+
+```json
+{
+  "order_id": "ord_a1b2c3d4",
+  "estimated_minutes": 28,
+  "estimated_delivery_at": "2024-06-01T19:05:00Z"
+}
+```
+
+`estimated_minutes` se calcula desde el momento actual usando datos de tráfico en tiempo real y la cola de preparación del restaurante. La estimación se refresca en cada llamada, por lo que se vuelve más precisa a medida que avanza el pedido. Una vez que el repartidor lo recoge, `estimated_delivery_at` también se refleja en el objeto principal de estado de entrega.
+
+## Mantente al día
+
+Hay dos formas de recibir actualizaciones de entrega en tu app:
+
+**Webhooks (recomendado)** — Suscríbete a eventos como `delivery.status_updated` y `delivery.delivered` para recibir notificaciones push instantáneas cada vez que cambia el estado. Este método no requiere sondeo y mantiene tu UI sincronizada con mínima latencia. Consulta la [guía de Webhooks](/es/guides/webhooks) para instrucciones.
+
+**Sondeo** — Si los webhooks no son viables en tu entorno, puedes llamar periódicamente a `GET /delivery/{order_id}/status` para comprobar cambios y actualizar tu UI.
+
+<Note>
+  Sondear `GET /delivery/{order_id}/status` más de una vez cada 30 segundos activará el límite de solicitudes. Las que superen este umbral devolverán `429 Too Many Requests`. Si debes sondear, usa un intervalo de 30 segundos o más.
+</Note>

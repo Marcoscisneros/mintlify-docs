@@ -1,0 +1,115 @@
+---
+title: "GET /menu/{id} — Obtener un artículo del menú"
+sidebarTitle: "Obtener artículo"
+description: "GET /menu/{id} — Recupera un artículo del menú por ID. Devuelve todos los detalles incluyendo tamaños, ingredientes y disponibilidad."
+---
+
+Obtén un artículo del menú por su ID único. Devuelve el objeto completo incluyendo todas las opciones de tamaño y precio, ingredientes disponibles y estado de disponibilidad.
+
+```text
+GET https://api.pizzaapi.com/v1/menu/{id}
+```
+
+## Parámetros de ruta
+
+<ParamField path="id" type="string" required>
+  Identificador único del artículo a obtener (p. ej. `item_01HXYZ123ABC`).
+</ParamField>
+
+## Ejemplo de solicitud
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.pizzaapi.com/v1/menu/item_01HXYZ123ABC \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const itemId = "item_01HXYZ123ABC";
+
+const response = await fetch(
+  `https://api.pizzaapi.com/v1/menu/${itemId}`,
+  {
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+    },
+  }
+);
+
+const item = await response.json();
+console.log(item);
+```
+
+</CodeGroup>
+
+## Respuesta
+
+```json
+{
+  "id": "item_01HXYZ123ABC",
+  "name": "Margherita Classic",
+  "description": "Salsa de tomate San Marzano, mozzarella fresca y albahaca sobre masa amasada a mano.",
+  "category": "pizza",
+  "sizes": [
+    { "size": "small", "price": 9.99 },
+    { "size": "medium", "price": 13.99 },
+    { "size": "large", "price": 17.99 }
+  ],
+  "available_toppings": [
+    "topping_extra_cheese",
+    "topping_basil",
+    "topping_olives"
+  ],
+  "image_url": "https://cdn.pizzaapi.com/items/margherita-classic.jpg",
+  "is_available": true
+}
+```
+
+## Campos de la respuesta
+
+<ResponseField name="id" type="string">
+  Identificador único del artículo.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Nombre visible del artículo.
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Descripción corta con ingredientes clave y estilo de preparación.
+</ResponseField>
+
+<ResponseField name="category" type="string">
+  Categoría a la que pertenece. Uno de `pizza`, `side` o `drink`.
+</ResponseField>
+
+<ResponseField name="sizes" type="array">
+  Combinaciones de tamaño y precio disponibles.
+
+  <Expandable title="Campos del objeto de tamaño">
+    <ResponseField name="sizes[].size" type="string">
+      Etiqueta de tamaño: `small`, `medium` o `large`.
+    </ResponseField>
+
+    <ResponseField name="sizes[].price" type="number">
+      Precio en USD para este tamaño.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="available_toppings" type="array">
+  Array de IDs de ingredientes que se pueden añadir al hacer un pedido.
+</ResponseField>
+
+<ResponseField name="image_url" type="string">
+  URL de la imagen del artículo alojada en el CDN de Pizza API.
+</ResponseField>
+
+<ResponseField name="is_available" type="boolean">
+  Si el artículo está disponible actualmente. Puede no estarlo por falta de stock.
+</ResponseField>
+
+<Note>
+  Si no existe ningún artículo con el `id` proporcionado, la API devuelve `404 Not Found`. Confirma que `is_available` sea `true` antes de mostrarlo como disponible en tu UI.
+</Note>

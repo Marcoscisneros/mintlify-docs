@@ -1,0 +1,50 @@
+---
+title: "Preguntas frecuentes sobre Pizza API"
+sidebarTitle: "Preguntas frecuentes"
+description: "Respuestas a las preguntas más comunes sobre integración, pedidos, entrega y facturación con Pizza API."
+---
+
+Estas preguntas frecuentes cubren la mayoría de las dudas que surgen al integrar Pizza API por primera vez. Si tu pregunta no aparece aquí, contacta con soporte a través del [Panel de Pizza API](https://dashboard.pizzaapi.com).
+
+## Empezar
+
+**¿Necesito una tarjeta de crédito para probar la API?**\
+No. Puedes generar una clave de sandbox gratuita y hacer todas las llamadas que quieras contra el entorno de prueba. Solo necesitarás un método de pago cuando pases a producción.
+
+**¿Cuánto tarda una integración básica?**\
+La mayoría de los equipos completan la integración básica — explorar el menú, crear un cliente y realizar un pedido — en menos de un día. Consulta el [Inicio rápido](/es/quickstart) para empezar.
+
+## Pedidos y entregas
+
+**¿Puedo modificar un pedido después de enviarlo?**\
+Sí, mientras el pedido esté en estado `pending`. Una vez que la cocina lo confirma, el pedido se bloquea y las modificaciones devuelven `409 Conflict`.
+
+**¿Cómo cancelo un pedido?**\
+Envía una solicitud `DELETE /orders/{id}`. Las cancelaciones se aceptan mientras el pedido no haya alcanzado el estado `preparing`. Consulta [Cancelar pedido](/es/api-reference/orders/cancel-order).
+
+**¿La API funciona fuera de Estados Unidos?**\
+Actualmente Pizza API opera solo en los Estados Unidos continentales. Estamos trabajando para ampliar la cobertura internacional en 2025.
+
+## Autenticación y seguridad
+
+**¿Cómo roto una clave de API expuesta?**\
+Genera una nueva clave en el panel, actualiza tus secretos de aplicación y revoca la clave antigua. Consulta [Autenticación](/es/authentication) para el flujo completo.
+
+**¿Las claves de API caducan?**\
+No caducan automáticamente, pero deberías rotarlas periódicamente y siempre que un miembro del equipo salga.
+
+## Webhooks
+
+**¿Por qué no recibo eventos de webhook?**
+
+- Verifica que tu endpoint devuelva un código `2xx` en menos de 5 segundos.
+- Comprueba que la URL configurada sea pública y accesible por HTTPS.
+- Revisa los intentos de entrega en el panel para ver errores específicos.
+
+**¿Cómo verifico la firma del webhook?**\
+Cada solicitud incluye una cabecera `X-PizzaAPI-Signature` con un HMAC-SHA256 del cuerpo firmado con tu secreto. Consulta la [guía de Webhooks](/es/guides/webhooks) para ejemplos en Node.js y Python.
+
+## Facturación
+
+**¿Cómo se facturan los pedidos?**\
+Pagas el coste del pedido más una pequeña tarifa de plataforma. La facturación detallada está disponible en el panel al final de cada ciclo mensual.

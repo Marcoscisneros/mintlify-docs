@@ -1,0 +1,70 @@
+---
+title: "Autenticación con clave de API para Pizza API"
+sidebarTitle: "Autenticación"
+description: "Genera y usa una clave de API para autenticar cada solicitud a Pizza API con un token Bearer en la cabecera Authorization."
+---
+
+Todas las solicitudes a Pizza API deben autenticarse con una clave de API. La clave identifica tu integración y autoriza a la API a procesar acciones en tu nombre — desde consultar el menú hasta realizar pedidos y suscribirse a webhooks. Esta guía explica cómo generar tu primera clave, incluirla en cada solicitud y mantenerla segura en producción.
+
+## Generar una clave de API
+
+1. Inicia sesión en tu [Panel de Pizza API](https://dashboard.pizzaapi.com).
+2. Navega a **Claves de API** en la barra lateral izquierda.
+3. Haz clic en **Crear clave**.
+4. Dale un nombre descriptivo (por ejemplo, `Producción web`) y cópiala en un lugar seguro.
+
+<Warning>
+  Solo podrás ver la clave completa una vez. Si la pierdes, tendrás que rotarla generando una nueva y revocando la antigua.
+</Warning>
+
+## Usa tu clave de API
+
+Envía tu clave en la cabecera `Authorization` de cada solicitud como un token Bearer:
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.pizzaapi.com/v1/menu \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.pizzaapi.com/v1/menu", {
+  headers: {
+    Authorization: "Bearer YOUR_API_KEY",
+  },
+});
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.pizzaapi.com/v1/menu",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+)
+```
+
+</CodeGroup>
+
+Si la clave falta o no es válida, la API devuelve un `401 Unauthorized`. Si la clave es válida pero no tiene permisos para el recurso solicitado, devuelve un `403 Forbidden`.
+
+## Rotar y revocar claves
+
+Desde el panel puedes revocar cualquier clave en cualquier momento. Las claves revocadas dejan de funcionar inmediatamente. Para minimizar el tiempo de inactividad al rotar:
+
+1. Genera una nueva clave en el panel.
+2. Actualiza los secretos de tu aplicación con la nueva clave.
+3. Despliega los cambios.
+4. Revoca la clave anterior cuando confirmes que ya no está en uso.
+
+## Buenas prácticas de seguridad
+
+<Tip>
+  Nunca incluyas claves de API en código del lado del cliente, repositorios públicos o archivos de configuración commiteados. Guarda las claves en variables de entorno o en un gestor de secretos y cárgalas en tiempo de ejecución.
+</Tip>
+
+- Usa una clave distinta por entorno (desarrollo, staging, producción).
+- Restringe quién puede acceder al panel donde se generan las claves.
+- Rota las claves periódicamente y siempre después de que un miembro del equipo salga.
+- Registra el uso de la clave a nivel de aplicación para poder detectar patrones inusuales.

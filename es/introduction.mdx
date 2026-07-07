@@ -1,0 +1,69 @@
+---
+title: "Pizza API: Integra pedidos de pizza en cualquier aplicación"
+sidebarTitle: "Introducción"
+description: "Pizza API es una API REST para crear experiencias de pedido de pizza. Explora menús, realiza pedidos y sigue entregas con simples llamadas HTTP."
+---
+
+Pizza API ofrece a los desarrolladores todo lo necesario para integrar un flujo completo de pedido de pizza en cualquier aplicación. Ya sea que estés construyendo una tienda para consumidores, un portal de almuerzo corporativo o un bot de pedidos automatizado, Pizza API gestiona el menú, los pedidos, el seguimiento de la entrega y los datos del cliente para que puedas centrarte en la experiencia.
+
+## Empezar
+
+<CardGroup cols={2}>
+  <Card title="Inicio rápido" icon="bolt" href="/es/quickstart">
+    Realiza tu primer pedido de pizza vía API en menos de 5 minutos.
+  </Card>
+
+  <Card title="Autenticación" icon="key" href="/es/authentication">
+    Aprende a generar y usar tu clave de API para autenticar cada solicitud.
+  </Card>
+
+  <Card title="Realizar un pedido" icon="pizza-slice" href="/es/guides/place-an-order">
+    Sigue una guía paso a paso para construir y enviar un pedido completo.
+  </Card>
+
+  <Card title="Referencia de la API de menú" icon="book-open" href="/es/api-reference/menu/list-items">
+    Explora el endpoint completo del menú: lista artículos, filtra por categoría y obtén detalles.
+  </Card>
+</CardGroup>
+
+## Características principales
+
+Pizza API está diseñada para cubrir cada etapa del ciclo de pedido — desde explorar el menú hasta la entrega en la puerta — con una interfaz REST limpia y predecible.
+
+<CardGroup cols={3}>
+  <Card title="Explorar el menú" icon="list">
+    Obtén el menú completo o filtra por categoría. Cada artículo incluye tamaños disponibles, ingredientes y precios.
+  </Card>
+
+  <Card title="Pedidos personalizados" icon="sliders">
+    Combina ingredientes, tipos de masa y tamaños para construir cualquier pedido que tus clientes puedan imaginar.
+  </Card>
+
+  <Card title="Seguimiento de entrega" icon="truck">
+    Consulta o suscríbete para recibir actualizaciones en tiempo real del estado del pedido, ubicación del conductor y hora estimada de llegada.
+  </Card>
+
+  <Card title="Perfiles de clientes" icon="user">
+    Guarda direcciones de entrega y recupera el historial de pedidos para que los clientes recurrentes finalicen la compra más rápido.
+  </Card>
+
+  <Card title="Webhooks" icon="webhook">
+    Recibe callbacks HTTP instantáneos cada vez que cambia el estado de un pedido, sin necesidad de sondeo.
+  </Card>
+
+  <Card title="Autenticación sencilla" icon="shield-halved">
+    Basta con una clave de API enviada como token Bearer en la cabecera `Authorization`.
+  </Card>
+</CardGroup>
+
+## URL base
+
+Todos los endpoints de Pizza API se sirven desde la siguiente URL base:
+
+```text
+https://api.pizzaapi.com/v1
+```
+
+<Note>
+  Cada solicitud debe realizarse sobre **HTTPS** y debe incluir una clave de API válida en la cabecera `Authorization`. Las solicitudes por HTTP simple o sin clave serán rechazadas con una respuesta `401 Unauthorized`.
+</Note>

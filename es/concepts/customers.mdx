@@ -1,0 +1,105 @@
+---
+title: "Clientes: perfiles, direcciones guardadas e historial"
+sidebarTitle: "Clientes"
+description: "Aprende cómo Pizza API gestiona perfiles de clientes, direcciones guardadas e historial de pedidos para personalizar la experiencia de compra."
+---
+
+El recurso de cliente representa a una persona que realiza pedidos a través de tu app. Pizza API almacena un perfil ligero para cada cliente — sus datos de contacto, una o más direcciones de entrega guardadas y un enlace a su historial de pedidos. Al mantener un registro del cliente, puedes autocompletar formularios de compra, admitir pedidos repetidos y personalizar la experiencia sin volver a pedir información en cada visita.
+
+## Objeto de cliente
+
+Un registro de cliente contiene los siguientes campos:
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `id` | string | Identificador único del cliente |
+| `name` | string | Nombre completo del cliente |
+| `email` | string | Correo usado para los recibos |
+| `phone` | string | Teléfono de contacto para la entrega |
+| `addresses` | array | Lista de direcciones de entrega guardadas |
+| `default_address_id` | string | ID de la dirección preseleccionada en la compra |
+| `created_at` | string | Marca de tiempo ISO 8601 de creación del perfil |
+
+Ejemplo de objeto de cliente:
+
+```json
+{
+  "id": "cus_9z8y7x",
+  "name": "Alice Johnson",
+  "email": "alice@example.com",
+  "phone": "+1-555-867-5309",
+  "addresses": [
+    {
+      "id": "addr_001",
+      "label": "Home",
+      "street": "123 Elm Street",
+      "city": "Springfield",
+      "state": "IL",
+      "zip": "62701",
+      "country": "US"
+    },
+    {
+      "id": "addr_002",
+      "label": "Work",
+      "street": "456 Oak Avenue, Suite 200",
+      "city": "Springfield",
+      "state": "IL",
+      "zip": "62704",
+      "country": "US"
+    }
+  ],
+  "default_address_id": "addr_001",
+  "created_at": "2024-01-15T09:00:00Z"
+}
+```
+
+## Obtener un cliente
+
+Usa `GET /customers/{id}` para recuperar el perfil actual del cliente por su ID. Es la forma principal de cargar direcciones guardadas y autocompletar formularios para clientes recurrentes.
+
+```bash
+curl https://api.pizzaapi.com/v1/customers/cus_9z8y7x \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+La respuesta es un único objeto de cliente con la misma forma mostrada arriba.
+
+## Direcciones de entrega
+
+Cada entrada del array `addresses` es un subobjeto totalmente estructurado:
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `id` | string | Identificador único de esta dirección |
+| `label` | string | Etiqueta amigable (p. ej. `"Home"`, `"Work"`) |
+| `street` | string | Calle y número, incluyendo unidad o suite si aplica |
+| `city` | string | Ciudad |
+| `state` | string | Estado o provincia |
+| `zip` | string | Código postal |
+| `country` | string | Código de país ISO 3166-1 alfa-2 (p. ej. `"US"`) |
+
+Un cliente puede guardar múltiples direcciones. En la compra, tu app puede mostrar la lista completa y dejar que el cliente elija, con `default_address_id` preseleccionado. Usa `PATCH /customers/{id}` para añadir, actualizar o eliminar direcciones, o cambiar cuál es la predeterminada.
+
+## Historial de pedidos
+
+Recupera todos los pedidos pasados de un cliente pasando su ID como parámetro de consulta al endpoint de pedidos:
+
+```bash
+curl "https://api.pizzaapi.com/v1/orders?customer_id=cus_9z8y7x" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+La respuesta es una lista paginada de objetos de pedido, ordenada por `created_at` descendente. Puedes combinarlo con otros filtros — por ejemplo, `&status=delivered` — para mostrar solo pedidos completados en una pantalla de historial.
+
+## Crear vs identificar clientes
+
+Los registros de cliente se crean una vez y se reutilizan en todas las interacciones futuras:
+
+1. **Crear** — llama a `POST /customers` con el `name`, `email` y `phone` del cliente la primera vez que se registra. Pizza API devuelve un `customer_id`.
+2. **Reutilizar** — pasa el mismo `customer_id` en cada `POST /orders` posterior. Pizza API asocia el pedido al perfil existente automáticamente.
+
+Nunca necesitas crear un cliente más de una vez. Los intentos duplicados con el mismo correo devuelven `409 Conflict` junto con el registro existente, para que tu app pueda recuperarse con elegancia.
+
+<Tip>
+  Guarda el `customer_id` devuelto por `POST /customers` en tu propia base de datos, mapeado al ID de usuario de tu aplicación. Así es trivial buscar el registro de Pizza API cuando un usuario autenticado realiza un pedido.
+</Tip>

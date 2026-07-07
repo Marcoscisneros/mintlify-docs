@@ -9,77 +9,161 @@
   },
   "favicon": "/favicon.svg",
   "navigation": {
-    "tabs": [
+    "languages": [
       {
-        "tab": "Documentation",
-        "groups": [
+        "language": "en",
+        "tabs": [
           {
-            "group": "Get Started",
-            "pages": [
-              "introduction",
-              "quickstart",
-              "authentication"
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "introduction",
+                  "quickstart",
+                  "authentication"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "concepts/menu",
+                  "concepts/orders",
+                  "concepts/customers",
+                  "concepts/delivery"
+                ]
+              },
+              {
+                "group": "Guides",
+                "pages": [
+                  "guides/place-an-order",
+                  "guides/customize-pizza",
+                  "guides/track-delivery",
+                  "guides/webhooks"
+                ]
+              },
+              {
+                "group": "Help",
+                "pages": [
+                  "errors",
+                  "faq"
+                ]
+              }
             ]
           },
           {
-            "group": "Core Concepts",
-            "pages": [
-              "concepts/menu",
-              "concepts/orders",
-              "concepts/customers",
-              "concepts/delivery"
-            ]
-          },
-          {
-            "group": "Guides",
-            "pages": [
-              "guides/place-an-order",
-              "guides/customize-pizza",
-              "guides/track-delivery",
-              "guides/webhooks"
-            ]
-          },
-          {
-            "group": "Help",
-            "pages": [
-              "errors",
-              "faq"
+            "tab": "API Reference",
+            "groups": [
+              {
+                "group": "Menu",
+                "pages": [
+                  "api-reference/menu/list-items",
+                  "api-reference/menu/get-item"
+                ]
+              },
+              {
+                "group": "Orders",
+                "pages": [
+                  "api-reference/orders/create-order",
+                  "api-reference/orders/get-order",
+                  "api-reference/orders/update-order",
+                  "api-reference/orders/cancel-order"
+                ]
+              },
+              {
+                "group": "Customers",
+                "pages": [
+                  "api-reference/customers/create-customer",
+                  "api-reference/customers/get-customer",
+                  "api-reference/customers/update-customer"
+                ]
+              },
+              {
+                "group": "Delivery",
+                "pages": [
+                  "api-reference/delivery/get-status",
+                  "api-reference/delivery/estimate"
+                ]
+              }
             ]
           }
         ]
       },
       {
-        "tab": "API Reference",
-        "groups": [
+        "language": "es",
+        "tabs": [
           {
-            "group": "Menu",
-            "pages": [
-              "api-reference/menu/list-items",
-              "api-reference/menu/get-item"
+            "tab": "Documentación",
+            "groups": [
+              {
+                "group": "Comenzar",
+                "pages": [
+                  "es/introduction",
+                  "es/quickstart",
+                  "es/authentication"
+                ]
+              },
+              {
+                "group": "Conceptos principales",
+                "pages": [
+                  "es/concepts/menu",
+                  "es/concepts/orders",
+                  "es/concepts/customers",
+                  "es/concepts/delivery"
+                ]
+              },
+              {
+                "group": "Guías",
+                "pages": [
+                  "es/guides/place-an-order",
+                  "es/guides/customize-pizza",
+                  "es/guides/track-delivery",
+                  "es/guides/webhooks"
+                ]
+              },
+              {
+                "group": "Ayuda",
+                "pages": [
+                  "es/errors",
+                  "es/faq"
+                ]
+              }
             ]
           },
           {
-            "group": "Orders",
-            "pages": [
-              "api-reference/orders/create-order",
-              "api-reference/orders/get-order",
-              "api-reference/orders/update-order",
-              "api-reference/orders/cancel-order"
-            ]
-          },
-          {
-            "group": "Customers",
-            "pages": [
-              "api-reference/customers/create-customer",
-              "api-reference/customers/get-customer",
-              "api-reference/customers/update-customer"
-            ]
-          },
-          {
-            "group": "Delivery",
-            "pages": [
-              "api-reference/delivery/get-status",
-              "api-reference/delivery/estimate"
+            "tab": "Referencia de la API",
+            "groups": [
+              {
+                "group": "Menú",
+                "pages": [
+                  "es/api-reference/menu/list-items",
+                  "es/api-reference/menu/get-item"
+                ]
+              },
+              {
+                "group": "Pedidos",
+                "pages": [
+                  "es/api-reference/orders/create-order",
+                  "es/api-reference/orders/get-order",
+                  "es/api-reference/orders/update-order",
+                  "es/api-reference/orders/cancel-order"
+                ]
+              },
+              {
+                "group": "Clientes",
+                "pages": [
+                  "es/api-reference/customers/create-customer",
+                  "es/api-reference/customers/get-customer",
+                  "es/api-reference/customers/update-customer"
+                ]
+              },
+              {
+                "group": "Entrega",
+                "pages": [
+                  "es/api-reference/delivery/get-status",
+                  "es/api-reference/delivery/estimate"
+                ]
+              }
             ]
           }
         ]

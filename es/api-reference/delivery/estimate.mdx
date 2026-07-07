@@ -1,0 +1,48 @@
+---
+title: "GET /delivery/{order_id}/estimate — ETA de entrega"
+sidebarTitle: "Estimación de entrega"
+description: "GET /delivery/{order_id}/estimate — Devuelve el tiempo estimado en minutos y marca ISO de cuando se espera la llegada del pedido."
+---
+
+Recupera una estimación puntual de la entrega de un pedido, incluyendo tanto los minutos restantes como la marca de tiempo de llegada esperada. Las estimaciones se calculan con la ubicación actual del repartidor, condiciones del tráfico y tiempo de preparación de la cocina, y se recalculan en cada llamada.
+
+## Endpoint
+
+```text
+GET https://api.pizzaapi.com/v1/delivery/{order_id}/estimate
+```
+
+## Parámetros de ruta
+
+<ParamField path="order_id" type="string" required>
+  ID único del pedido para el que quieres una estimación (p. ej. `ord_xyz789`).
+</ParamField>
+
+## Ejemplo de solicitud
+
+```bash cURL
+curl --request GET \
+  --url https://api.pizzaapi.com/v1/delivery/ord_xyz789/estimate \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+
+## Respuesta
+
+Devuelve el objeto de estimación con estado `200 OK`.
+
+```json
+{
+  "order_id": "ord_xyz789",
+  "estimated_minutes": 35,
+  "estimated_delivery_at": "2024-01-15T19:45:00Z",
+  "calculated_at": "2024-01-15T19:10:00Z"
+}
+```
+
+<Note>
+  Las estimaciones solo están disponibles cuando el pedido alcanza el estado `confirmed`. Llamar a este endpoint con un pedido aún `pending` devuelve `404 Not Found`. Comprueba el estado con `GET /delivery/{order_id}/status` antes de solicitar una estimación.
+</Note>
+
+<Tip>
+  Las estimaciones se recalculan en cada solicitud. Para la ETA más precisa, vuelve a llamar cada vez que cambie el `status` del pedido. Mostrar `calculated_at` junto a la ETA ayuda a los clientes a entender cuándo se actualizó.
+</Tip>

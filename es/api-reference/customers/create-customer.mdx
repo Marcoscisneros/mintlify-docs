@@ -1,0 +1,83 @@
+---
+title: "POST /customers — Crear un nuevo perfil de cliente"
+sidebarTitle: "Crear cliente"
+description: "Usa POST /customers para crear un perfil con nombre, correo, teléfono opcional y direcciones. Devuelve el ID del cliente para pedidos futuros."
+---
+
+Crear un perfil de cliente es el primer paso para hacer pedidos con Pizza API. Una vez creado, el `customer_id` devuelto se puede adjuntar a cualquier pedido, habilitando direcciones guardadas, historial y preferencias personalizadas de entrega.
+
+## Endpoint
+
+```text
+POST https://api.pizzaapi.com/v1/customers
+```
+
+## Cuerpo de la solicitud
+
+<ParamField body="name" type="string" required>
+  Nombre completo del cliente tal como aparecerá en recibos y etiquetas de entrega.
+</ParamField>
+
+<ParamField body="email" type="string" required>
+  Correo del cliente. Debe ser único entre todos los perfiles — se devuelve `409 Conflict` si ya está registrado.
+</ParamField>
+
+<ParamField body="phone" type="string">
+  Teléfono en [formato E.164](https://en.wikipedia.org/wiki/E.164) (p. ej. `+15550001234`). Se usa para notificaciones y contacto del repartidor.
+</ParamField>
+
+<ParamField body="addresses" type="array">
+  Lista opcional de direcciones de entrega a asociar con el perfil en el momento de la creación. Se pueden añadir más tarde con `PATCH /customers/{id}`.
+</ParamField>
+
+## Ejemplo de solicitud
+
+```bash cURL
+curl --request POST \
+  --url https://api.pizzaapi.com/v1/customers \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "name": "Jamie Hernandez",
+    "email": "jamie.hernandez@example.com",
+    "phone": "+15550019876",
+    "addresses": [
+      {
+        "label": "Home",
+        "street": "742 Evergreen Terrace",
+        "city": "Springfield",
+        "state": "IL",
+        "zip": "62701"
+      }
+    ]
+  }'
+```
+
+## Respuesta
+
+Devuelve el nuevo objeto de cliente con estado `201 Created`.
+
+```json
+{
+  "id": "cus_a1b2c3d4",
+  "name": "Jamie Hernandez",
+  "email": "jamie.hernandez@example.com",
+  "phone": "+15550019876",
+  "addresses": [
+    {
+      "id": "adr_z9y8x7w6",
+      "label": "Home",
+      "street": "742 Evergreen Terrace",
+      "city": "Springfield",
+      "state": "IL",
+      "zip": "62701"
+    }
+  ],
+  "default_address_id": "adr_z9y8x7w6",
+  "created_at": "2024-01-15T18:00:00Z"
+}
+```
+
+<Note>
+  El campo `id` en la respuesta es tu `customer_id`. Guárdalo en tu sistema — lo enviarás en cada pedido para asociarlo a este perfil.
+</Note>

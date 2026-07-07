@@ -1,0 +1,60 @@
+---
+title: "PATCH /customers/{id} — Actualizar datos de cliente"
+sidebarTitle: "Actualizar cliente"
+description: "Usa PATCH /customers/{id} para actualizar nombre, teléfono, dirección predeterminada o direcciones guardadas. Envía solo los campos a cambiar."
+---
+
+Este endpoint realiza una actualización parcial en un perfil de cliente existente. Solo necesitas incluir los campos que quieres modificar — los omitidos permanecen igual. Útil para actualizar contacto, añadir un teléfono o cambiar la dirección de entrega preferida.
+
+## Endpoint
+
+```text
+PATCH https://api.pizzaapi.com/v1/customers/{id}
+```
+
+## Parámetros de ruta
+
+<ParamField path="id" type="string" required>
+  ID único del perfil a actualizar (p. ej. `cus_a1b2c3d4`).
+</ParamField>
+
+## Cuerpo de la solicitud
+
+Todos los campos son opcionales. Incluye solo los que desees actualizar.
+
+<ParamField body="name" type="string">
+  Nombre completo actualizado.
+</ParamField>
+
+<ParamField body="phone" type="string">
+  Teléfono actualizado en formato E.164.
+</ParamField>
+
+<ParamField body="default_address_id" type="string">
+  ID de una dirección guardada existente para establecer como preferida. Debe referenciar una dirección válida del array `addresses` del cliente.
+</ParamField>
+
+<ParamField body="addresses" type="array">
+  Lista de direcciones que **reemplaza el array existente** — no es una fusión. Incluye todas las que quieras conservar más las nuevas.
+</ParamField>
+
+## Ejemplo de solicitud
+
+```bash cURL
+curl --request PATCH \
+  --url https://api.pizzaapi.com/v1/customers/cus_a1b2c3d4 \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "phone": "+15550009999",
+    "default_address_id": "adr_m3n4o5p6"
+  }'
+```
+
+## Respuesta
+
+Devuelve el objeto de cliente completo actualizado con estado `200 OK`.
+
+<Tip>
+  Para añadir una dirección sin eliminar las existentes, primero obtén el perfil con `GET /customers/{id}` para recuperar el array `addresses` completo. Luego envía el array completo — entradas existentes más la nueva — en tu `PATCH`.
+</Tip>

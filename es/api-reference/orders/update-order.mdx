@@ -1,0 +1,71 @@
+---
+title: "PATCH /orders/{id} — Actualizar un pedido pendiente"
+sidebarTitle: "Actualizar pedido"
+description: "PATCH /orders/{id} — Actualiza líneas o dirección de entrega de un pedido pendiente. Devuelve el pedido actualizado. Solo permitido mientras esté pending."
+---
+
+Modifica las líneas o la dirección de entrega de un pedido existente. Este endpoint usa semántica de actualización parcial — incluye solo los campos que quieras cambiar. Enviar `items` reemplaza todo el array, y `delivery_address` reemplaza toda la dirección.
+
+```text
+PATCH https://api.pizzaapi.com/v1/orders/{id}
+```
+
+<Warning>
+  Este endpoint solo puede llamarse mientras el pedido esté en estado `pending`. Una vez confirmado por la cocina, no se permiten más modificaciones y la API devuelve `409 Conflict`.
+</Warning>
+
+## Parámetros de ruta
+
+<ParamField path="id" type="string" required>
+  Identificador único del pedido a actualizar (p. ej. `order_55ABCD112233`).
+</ParamField>
+
+## Cuerpo de la solicitud
+
+Todos los campos son opcionales. Envía solo los que quieras actualizar.
+
+<ParamField body="items" type="array">
+  Reemplaza **todo** el array de líneas. Debe contener al menos una línea. Sigue la misma estructura que en [Crear pedido](/es/api-reference/orders/create-order).
+</ParamField>
+
+<ParamField body="delivery_address" type="object">
+  Reemplaza **toda** la dirección de entrega del pedido.
+</ParamField>
+
+## Ejemplo de solicitud
+
+```bash cURL
+curl -X PATCH https://api.pizzaapi.com/v1/orders/order_55ABCD112233 \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {
+        "menu_item_id": "item_01HXYZ123ABC",
+        "size": "large",
+        "quantity": 2,
+        "toppings": ["topping_extra_cheese"],
+        "special_instructions": "Extra crujiente por favor."
+      }
+    ],
+    "delivery_address": {
+      "street": "100 New Street",
+      "city": "Springfield",
+      "state": "IL",
+      "zip": "62701",
+      "country": "US"
+    }
+  }'
+```
+
+## Respuesta
+
+Devuelve el objeto de pedido actualizado. La estructura es idéntica a la de [Obtener pedido](/es/api-reference/orders/get-order).
+
+## Errores
+
+| Estado | Código | Descripción |
+| --- | --- | --- |
+| `409 Conflict` | `order_not_modifiable` | El estado ya no es `pending` y no puede modificarse. |
+| `404 Not Found` | `order_not_found` | No existe ningún pedido con el ID proporcionado. |
+| `422 Unprocessable Entity` | `validation_error` | Uno o más campos no superaron la validación. |

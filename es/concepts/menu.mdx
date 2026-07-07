@@ -1,0 +1,129 @@
+---
+title: "Artículos del menú: pizzas, ingredientes y tamaños en Pizza API"
+sidebarTitle: "Menú"
+description: "Comprende cómo Pizza API estructura los artículos del menú, tamaños e ingredientes para mostrar opciones y crear formularios de pedido en tu app."
+---
+
+El recurso de menú es la base de toda experiencia de pedido construida sobre Pizza API. Expone el catálogo completo de artículos que tus clientes pueden pedir — pizzas, acompañamientos y bebidas — junto con sus tamaños disponibles, tramos de precio y opciones de ingredientes. Al obtener el menú en tiempo de ejecución, tu aplicación siempre refleja la oferta más reciente sin necesidad de una actualización manual.
+
+## Estructura de un artículo del menú
+
+Cada artículo del menú se devuelve como un objeto JSON con los siguientes campos clave:
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `id` | string | Identificador único del artículo |
+| `name` | string | Nombre visible para el cliente |
+| `description` | string | Descripción corta del artículo |
+| `category` | string | Uno de `"pizza"`, `"side"` o `"drink"` |
+| `sizes` | array | Lista de objetos `{ size, price }` disponibles |
+| `available_toppings` | array | Lista de IDs de ingredientes que se pueden añadir |
+| `image_url` | string | URL de la imagen del artículo |
+| `is_available` | boolean | Si el artículo está disponible actualmente |
+
+Ejemplo de un artículo del menú para una pizza Margherita:
+
+```json
+{
+  "id": "item_margherita",
+  "name": "Margherita",
+  "description": "Base clásica de tomate con mozzarella fresca y albahaca.",
+  "category": "pizza",
+  "sizes": [
+    { "size": "small",  "price": 9.99  },
+    { "size": "medium", "price": 12.99 },
+    { "size": "large",  "price": 15.99 }
+  ],
+  "available_toppings": [
+    "top_extra_cheese",
+    "top_mushrooms",
+    "top_olives",
+    "top_pepperoni"
+  ],
+  "image_url": "https://cdn.pizzaapi.com/items/margherita.jpg",
+  "is_available": true
+}
+```
+
+## Obtener un artículo
+
+Usa `GET /menu/{id}` para recuperar un artículo específico por su ID. Es útil para mostrar una página de detalle o validar una selección antes de construir un pedido.
+
+```bash
+curl https://api.pizzaapi.com/v1/menu/item_margherita \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+La respuesta es un único objeto de artículo del menú con la misma forma mostrada antes.
+
+## Tamaños
+
+Pizza API usa tres tamaños estándar. Cada tamaño se asocia a un diámetro típico y a un precio base que varía según el artículo. Los valores del array `sizes` de cada artículo reflejan el precio real de esa pizza específica — la tabla siguiente muestra rangos de referencia.
+
+| Tamaño | Diámetro típico | Precio base |
+| --- | --- | --- |
+| `small` | 10 pulg | \$8.99 |
+| `medium` | 12 pulg | \$11.99 |
+| `large` | 14 pulg | \$14.99 |
+
+Los precios mostrados aquí son ilustrativos. Lee siempre el array `sizes` del propio objeto de artículo para mostrar precios exactos y actualizados en tu app.
+
+## Ingredientes
+
+Los ingredientes se devuelven como objetos independientes y se referencian por ID en la lista `available_toppings` de cada artículo. Cada ingrediente tiene los siguientes campos:
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `id` | string | Identificador único del ingrediente |
+| `name` | string | Nombre visible para el cliente |
+| `category` | string | Uno de `"cheese"`, `"meat"` o `"veggie"` |
+| `extra_price` | number | Cargo adicional por selección de ingrediente |
+
+Ejemplo de tres objetos de ingrediente:
+
+```json
+[
+  {
+    "id": "top_extra_cheese",
+    "name": "Mozzarella extra",
+    "category": "cheese",
+    "extra_price": 1.50
+  },
+  {
+    "id": "top_pepperoni",
+    "name": "Pepperoni",
+    "category": "meat",
+    "extra_price": 1.75
+  },
+  {
+    "id": "top_mushrooms",
+    "name": "Champiñones",
+    "category": "veggie",
+    "extra_price": 1.00
+  }
+]
+```
+
+## Filtrar el menú
+
+El endpoint `GET /menu` admite varios parámetros de consulta para mostrar los artículos correctos:
+
+| Parámetro | Descripción |
+| --- | --- |
+| `category` | Filtra por categoría: `pizza`, `side` o `drink` |
+| `available` | Ponlo en `true` para devolver solo artículos disponibles |
+| `search` | Búsqueda de texto libre en `name` y `description` |
+
+Por ejemplo, para obtener todas las pizzas disponibles que coincidan con "margherita":
+
+```bash
+curl https://api.pizzaapi.com/v1/menu \
+  ?category=pizza \
+  &available=true \
+  &search=margherita \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+<Tip>
+  Pasa siempre `?available=true` al construir tu formulario de pedido. Esto filtra los artículos agotados antes de que tus clientes los vean, evitando pedidos fallidos más tarde.
+</Tip>

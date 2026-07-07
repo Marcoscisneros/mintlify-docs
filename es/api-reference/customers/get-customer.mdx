@@ -1,0 +1,56 @@
+---
+title: "GET /customers/{id} — Obtener perfil de cliente"
+sidebarTitle: "Obtener cliente"
+description: "Usa GET /customers/{id} para obtener el perfil por ID, devolviendo nombre, contacto, direcciones guardadas y dirección predeterminada."
+---
+
+Usa este endpoint para recuperar un perfil de cliente completo por su ID único. La respuesta incluye datos de contacto, todas las direcciones guardadas y la dirección predeterminada actual — útil para autocompletar formularios o mostrar información de cuenta.
+
+## Endpoint
+
+```text
+GET https://api.pizzaapi.com/v1/customers/{id}
+```
+
+## Parámetros de ruta
+
+<ParamField path="id" type="string" required>
+  ID único del cliente devuelto cuando se creó el perfil (p. ej. `cus_a1b2c3d4`).
+</ParamField>
+
+## Ejemplo de solicitud
+
+```bash cURL
+curl --request GET \
+  --url https://api.pizzaapi.com/v1/customers/cus_a1b2c3d4 \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+
+## Respuesta
+
+Devuelve el objeto de cliente con estado `200 OK`.
+
+```json
+{
+  "id": "cus_a1b2c3d4",
+  "name": "Jamie Hernandez",
+  "email": "jamie.hernandez@example.com",
+  "phone": "+15550019876",
+  "addresses": [
+    {
+      "id": "adr_z9y8x7w6",
+      "label": "Home",
+      "street": "742 Evergreen Terrace",
+      "city": "Springfield",
+      "state": "IL",
+      "zip": "62701"
+    }
+  ],
+  "default_address_id": "adr_z9y8x7w6",
+  "created_at": "2024-01-15T18:00:00Z"
+}
+```
+
+<Note>
+  Si no existe ningún cliente con el `id` proporcionado, la API devuelve `404 Not Found`. Asegúrate de usar exactamente el `id` devuelto en la creación — los IDs distinguen mayúsculas.
+</Note>

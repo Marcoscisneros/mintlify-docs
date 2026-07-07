@@ -1,0 +1,208 @@
+---
+title: "Crear un nuevo pedido — POST /orders"
+sidebarTitle: "Crear pedido"
+description: "POST /orders — Crea un nuevo pedido de pizza con líneas, ingredientes y dirección de entrega. Devuelve el ID del pedido y el estado inicial pending."
+---
+
+Realiza un nuevo pedido de pizza a nombre de un cliente. Envía una o más líneas — cada una con un artículo del menú, tamaño, cantidad e ingredientes opcionales — junto con una dirección de entrega. El pedido se crea con estado `pending` y puede modificarse hasta que la cocina lo confirme.
+
+```text
+POST https://api.pizzaapi.com/v1/orders
+```
+
+## Cuerpo de la solicitud
+
+<ParamField body="customer_id" type="string" required>
+  ID único del cliente que realiza el pedido. Debe corresponder a un cliente existente.
+</ParamField>
+
+<ParamField body="items" type="array" required>
+  Array de objetos de línea que representan las pizzas y otros productos. Debe contener al menos un artículo.
+
+  <Expandable title="Campos del objeto de línea">
+    <ParamField body="items[].menu_item_id" type="string" required>
+      ID del artículo del menú a pedir (p. ej. `item_01HXYZ123ABC`).
+    </ParamField>
+
+    <ParamField body="items[].size" type="string" required>
+      Tamaño deseado. Valores aceptados: `small`, `medium`, `large`.
+    </ParamField>
+
+    <ParamField body="items[].quantity" type="integer" required>
+      Cantidad de este artículo. Mínimo: `1`.
+    </ParamField>
+
+    <ParamField body="items[].toppings" type="array">
+      Array de IDs de ingredientes a añadir. Cada ID debe estar en `available_toppings` del artículo.
+    </ParamField>
+
+    <ParamField body="items[].special_instructions" type="string">
+      Instrucciones de preparación de texto libre (p. ej. "masa extra crujiente"). Máximo 200 caracteres.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="delivery_address" type="object" required>
+  Dirección a la que se entregará el pedido.
+
+  <Expandable title="Campos del objeto de dirección">
+    <ParamField body="delivery_address.street" type="string" required>
+      Calle con número (p. ej. `123 Main St, Apt 4`).
+    </ParamField>
+
+    <ParamField body="delivery_address.city" type="string" required>
+      Ciudad.
+    </ParamField>
+
+    <ParamField body="delivery_address.state" type="string" required>
+      Abreviatura de estado de dos letras (p. ej. `CA`, `NY`).
+    </ParamField>
+
+    <ParamField body="delivery_address.zip" type="string" required>
+      Código postal.
+    </ParamField>
+
+    <ParamField body="delivery_address.country" default="US" type="string">
+      Código de país ISO 3166-1 alfa-2. Por defecto `US`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Ejemplo de solicitud
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.pizzaapi.com/v1/orders \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "cust_98ZABC987XYZ",
+    "items": [
+      {
+        "menu_item_id": "item_01HXYZ123ABC",
+        "size": "large",
+        "quantity": 1,
+        "toppings": ["topping_extra_cheese", "topping_olives"],
+        "special_instructions": "Masa bien cocida por favor."
+      },
+      {
+        "menu_item_id": "item_03HXYZ789GHI",
+        "size": "medium",
+        "quantity": 2,
+        "toppings": []
+      }
+    ],
+    "delivery_address": {
+      "street": "742 Evergreen Terrace",
+      "city": "Springfield",
+      "state": "IL",
+      "zip": "62704",
+      "country": "US"
+    }
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch("https://api.pizzaapi.com/v1/orders", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    customer_id: "cust_98ZABC987XYZ",
+    items: [
+      {
+        menu_item_id: "item_01HXYZ123ABC",
+        size: "large",
+        quantity: 1,
+        toppings: ["topping_extra_cheese", "topping_olives"],
+        special_instructions: "Masa bien cocida por favor.",
+      },
+      {
+        menu_item_id: "item_03HXYZ789GHI",
+        size: "medium",
+        quantity: 2,
+        toppings: [],
+      },
+    ],
+    delivery_address: {
+      street: "742 Evergreen Terrace",
+      city: "Springfield",
+      state: "IL",
+      zip: "62704",
+      country: "US",
+    },
+  }),
+});
+
+const order = await response.json();
+console.log(order);
+```
+
+</CodeGroup>
+
+## Respuesta
+
+```json
+{
+  "id": "order_55ABCD112233",
+  "status": "pending",
+  "customer_id": "cust_98ZABC987XYZ",
+  "items": [
+    {
+      "menu_item_id": "item_01HXYZ123ABC",
+      "name": "Margherita Classic",
+      "size": "large",
+      "quantity": 1,
+      "toppings": ["topping_extra_cheese", "topping_olives"],
+      "special_instructions": "Masa bien cocida por favor.",
+      "unit_price": 17.99,
+      "line_total": 17.99
+    }
+  ],
+  "subtotal": 17.99,
+  "tax": 1.62,
+  "total": 19.61,
+  "delivery_address": {
+    "street": "742 Evergreen Terrace",
+    "city": "Springfield",
+    "state": "IL",
+    "zip": "62704",
+    "country": "US"
+  },
+  "created_at": "2024-06-15T14:23:00Z",
+  "estimated_delivery_time": "2024-06-15T15:08:00Z"
+}
+```
+
+## Campos de la respuesta
+
+<ResponseField name="id" type="string">
+  Identificador único del pedido recién creado.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Estado actual del pedido. Siempre `pending` justo después de la creación. Progresa a `confirmed` → `preparing` → `out_for_delivery` → `delivered`.
+</ResponseField>
+
+<ResponseField name="customer_id" type="string">
+  ID del cliente que realizó el pedido.
+</ResponseField>
+
+<ResponseField name="total" type="number">
+  Total final del pedido incluyendo impuestos, en USD.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  Marca ISO 8601 de creación del pedido.
+</ResponseField>
+
+<ResponseField name="estimated_delivery_time" type="string">
+  Marca ISO 8601 de la ventana estimada de entrega.
+</ResponseField>
+
+<Note>
+  Para modificar líneas o la dirección después de crear el pedido, usa `PATCH /orders/{id}`. Los cambios solo se permiten mientras el estado sea `pending`.
+</Note>

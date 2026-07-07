@@ -1,0 +1,136 @@
+---
+title: "Pedidos: ciclo de vida, estados y artículos de línea"
+sidebarTitle: "Pedidos"
+description: "Aprende cómo Pizza API modela los pedidos, sigue las transiciones de estado y estructura los artículos de línea para gestionar todo el ciclo de vida en tu app."
+---
+
+Un pedido en Pizza API representa una solicitud completa del cliente — desde el momento en que envía su carrito hasta la confirmación de entrega. Cada pedido enlaza un cliente, uno o más artículos de línea, detalles de precio, una dirección de entrega y un estado en vivo que avanza por un ciclo de vida definido. Entender el modelo de pedidos te permite construir flujos de compra fiables, pantallas de estado en tiempo real y funciones de gestión posteriores.
+
+## Objeto de pedido
+
+Un pedido creado por completo contiene los siguientes campos:
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `id` | string | Identificador único del pedido |
+| `customer_id` | string | ID del cliente que realizó el pedido |
+| `status` | string | Estado del ciclo de vida (ver más abajo) |
+| `items` | array | Lista de artículos de línea del pedido |
+| `subtotal` | number | Suma de los totales de línea antes de impuestos |
+| `tax` | number | Importe de impuestos calculado |
+| `total` | number | Importe final (`subtotal + tax`) |
+| `delivery_address` | object | Dirección completa de entrega |
+| `created_at` | string | Marca de tiempo ISO 8601 de creación |
+| `updated_at` | string | Marca de tiempo ISO 8601 de la última actualización |
+
+Ejemplo de objeto de pedido:
+
+```json
+{
+  "id": "ord_a1b2c3d4",
+  "customer_id": "cus_9z8y7x",
+  "status": "confirmed",
+  "items": [
+    {
+      "menu_item_id": "item_margherita",
+      "name": "Margherita",
+      "size": "large",
+      "quantity": 1,
+      "toppings": ["top_extra_cheese", "top_mushrooms"],
+      "unit_price": 15.99,
+      "line_total": 18.49
+    }
+  ],
+  "subtotal": 18.49,
+  "tax": 1.67,
+  "total": 20.16,
+  "delivery_address": {
+    "street": "123 Elm Street",
+    "city": "Springfield",
+    "state": "IL",
+    "zip": "62701",
+    "country": "US"
+  },
+  "created_at": "2024-06-01T18:30:00Z",
+  "updated_at": "2024-06-01T18:31:45Z"
+}
+```
+
+## Obtener un pedido
+
+Usa `GET /orders/{id}` para consultar el estado actual de cualquier pedido por su ID. Es la forma principal de revisar el estado, mostrar detalles o confirmar una entrega exitosa.
+
+```bash
+curl https://api.pizzaapi.com/v1/orders/ord_a1b2c3d4 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+La respuesta es un único objeto de pedido con la forma mostrada arriba.
+
+## Estados del pedido
+
+Los pedidos pasan por un conjunto fijo de estados durante su ciclo de vida. Una vez que un estado avanza, no puede retroceder.
+
+| Estado | Significado |
+| --- | --- |
+| `pending` | Pedido recibido; a la espera de confirmación de la cocina |
+| `confirmed` | La cocina acepta el pedido y está en cola para preparación |
+| `preparing` | La pizza se está elaborando |
+| `out_for_delivery` | El repartidor ha recogido el pedido y va en camino |
+| `delivered` | El pedido se ha entregado al cliente |
+| `cancelled` | El pedido se canceló antes de completarse |
+
+El flujo típico exitoso es:
+
+<Steps>
+  <Step title="pending">
+    El pedido se crea con `POST /orders`. La cocina aún no lo ha reconocido.
+  </Step>
+  <Step title="confirmed">
+    La cocina acepta el pedido. Las modificaciones ya no son posibles.
+  </Step>
+  <Step title="preparing">
+    Se están reuniendo los ingredientes y la pizza está en el horno.
+  </Step>
+  <Step title="out_for_delivery">
+    Un repartidor ha recogido el pedido. El seguimiento en vivo se activa.
+  </Step>
+  <Step title="delivered">
+    El pedido ha llegado al cliente. El ciclo está completo.
+  </Step>
+</Steps>
+
+## Artículos de línea
+
+Cada entrada del array `items` representa una selección del menú en el pedido:
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `menu_item_id` | string | ID del artículo del menú pedido |
+| `name` | string | Nombre del artículo al momento del pedido (snapshot) |
+| `size` | string | Tamaño: `small`, `medium` o `large` |
+| `quantity` | integer | Cantidad de este artículo |
+| `toppings` | array | Lista de IDs de ingredientes añadidos |
+| `unit_price` | number | Precio unitario (precio base \+ ingredientes) |
+| `line_total` | number | `unit_price × quantity` |
+
+El `name` y el `unit_price` se guardan como una foto en el momento del pedido, de modo que los pedidos históricos siempre reflejan lo que se cobró, aunque el menú cambie después.
+
+## Actualizar un pedido
+
+Puedes modificar los campos `items`, `delivery_address` u otros campos mutables usando `PATCH /orders/{id}`.
+
+<Warning>
+  Los pedidos solo pueden actualizarse mientras estén en estado `pending`. Cuando avanzan a `confirmed`, el pedido queda bloqueado y las solicitudes de actualización devuelven un `409 Conflict`. Asegúrate de que tu UI de compra confirme todos los detalles antes de enviar, o implementa una pequeña ventana de cancelación para cambios de última hora.
+</Warning>
+
+## Cancelar un pedido
+
+Envía una solicitud `DELETE /orders/{id}` para cancelar. Las cancelaciones se aceptan mientras el pedido no haya llegado a `preparing`. Una vez que la cocina comienza a elaborar la pizza, la cancelación ya no está disponible por la API.
+
+```bash
+curl -X DELETE https://api.pizzaapi.com/v1/orders/ord_a1b2c3d4 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+Una cancelación exitosa cambia el estado a `cancelled` y, cuando corresponde, dispara un reembolso a través de tu proveedor de pagos configurado. Consulta el campo `cancelled_at` en la respuesta para conocer la marca de tiempo exacta.
